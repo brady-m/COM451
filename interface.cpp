@@ -11,20 +11,12 @@
 #include <cstdlib>  // includes atoi() and atof()
 #include <string.h> // used by crack.h
 #include "crack.h"
-
-// --- TODO: create interface.h library, move these there, and crack to here
-// --- also, update crack function to not need the -w flag at compile time
-struct AParams {
-  bool  verbose;
-  int   runMode;
-  int   myParam1;
-  float myParam2;
-};
-int usage();
-int setDefaults(AParams *PARAMS);
-int viewParams(const AParams *PARAMS);
-// ---
-
+#include "interface.h"
+#include <cuda_runtime_api.h>
+#include <cuda.h>
+#include <vector>
+#include "attractor.h"
+#include "visualizeAttractor.h"
 /******************************************************************************/
 int main(int argc, char *argv[]){
 
@@ -32,7 +24,7 @@ int main(int argc, char *argv[]){
   AParams PARAMS;
 
   setDefaults(&PARAMS);
-
+  std::vector<double> bestCoordinates;
   // -- get parameters that differ from defaults from command line:
   while((ch = crack(argc, argv, "r|v|a|b|", 0)) != 0) {
   	switch(ch){
@@ -49,20 +41,19 @@ int main(int argc, char *argv[]){
 
   // run the system depending on runMode
   switch(PARAMS.runMode){
+      case 0:
+          if (PARAMS.verbose) printf("\n -- RunMode = 0. Information about PC. \n");
+          ShowDeviceInformation();
+          break;
       case 1:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 1 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction1(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction1 -- "
+          if (PARAMS.verbose) printf("\n -- RunMode = 1. Calculate attractor -- \n");
+          // Param1 here defines runinng in multhread mode or not 
+          bestCoordinates = calculateAttractor(PARAMS.myParam1);
           break;
 
       case 2:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 2 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction2(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction2 -- "
+          if (PARAMS.verbose) printf("\n -- RunMode = 2. Visualize attractor -- \n");
+          visualizeAttractor(bestCoordinates);
           break;
 
       case 3:
@@ -114,5 +105,22 @@ int viewParams(const AParams *PARAMS){
   printf("\n");
   return 0;
 }
-
+void ShowDeviceInformation()
+{
+   cudaDeviceProp  prop;
+   int count;    
+   unsigned numCores = std::thread::hardware_concurrency();
+   cudaGetDeviceCount( &count );
+   for (int i=0; i< count; i++) {
+      cudaGetDeviceProperties( &prop, i );
+      printf( "   --- Information for device %d ---\n", i );
+      printf( "Name:  %s\n", prop.name );
+      printf( "Max amount of shared memory per block:  %ld\n", prop.sharedMemPerBlock );              
+      printf( "Max number of threads per block:  %d\n", prop.maxThreadsPerBlock );
+      printf( "Max number of blocks per dimension of the grid:  %d\n", prop.maxGridSize );       
+      printf( "Total constant Mem:  %ld\n", prop.totalConstMem );
+      printf( "Mumber of multiprocessors on the GPU card:  %d\n", prop.multiProcessorCount );
+  }
+  printf( "Number of cores: %d\n", numCores);
+}
 /******************************************************************************/
