@@ -94,6 +94,17 @@ int runIt(GPU_Palette* P1, CPUAnimBitmap* A1){
 	int xIdx;
 	int yIdx;
 
+	int xIdx2;
+	int yIdx2;
+
+	int xIdx3;
+	int yIdx3;
+
+	int xIdx4;
+	int yIdx4;
+
+	int xIdx5;
+	int yIdx5;
 	for (long i = 1; i< 100000; i++)
 	{
 
@@ -108,9 +119,24 @@ int runIt(GPU_Palette* P1, CPUAnimBitmap* A1){
 		xIdx = floor((thePoint.x * 32) + 960); // (X * scalar) + (gWidth/2)
 		yIdx = floor((thePoint.y * 18) + 540); // (Y * scalar) + (gHeight/2)
 
-		updatePalette(P1, xIdx, yIdx, thePoint.z);
-    A1->drawPalette();
+		xIdx2 = floor((thePoint.x * 16) + 500); // (X * scalar) + (gWidth/2)
+		yIdx2 = floor((thePoint.y * 9) + 200); // (Y * scalar) + (gHeight/2)
 
+		xIdx3 = floor((thePoint.x * 40) + 700); // (X * scalar) + (gWidth/2)
+		yIdx3 = floor((thePoint.y * 30) + 40); // (Y * scalar) + (gHeight/2)
+
+		xIdx4 = floor((thePoint.x * 20) + 460); // (X * scalar) + (gWidth/2)
+		yIdx4 = floor((thePoint.y * 10) + 740); // (Y * scalar) + (gHeight/2)
+
+		xIdx5 = floor((thePoint.x * 64) + 650); // (X * scalar) + (gWidth/2)
+		yIdx5 = floor((thePoint.y * 36) + 30); // (Y * scalar) + (gHeight/2)
+
+		updatePalette(P1, xIdx, yIdx, thePoint.z);
+		updatePalette(P1, xIdx2, yIdx2, thePoint.z);
+		updatePalette(P1, xIdx3, yIdx3, thePoint.z);
+		updatePalette(P1, xIdx4, yIdx4, thePoint.z);
+		updatePalette(P1, xIdx5, yIdx5, thePoint.z);
+    A1->drawPalette();
 	}
 
 return 0;
