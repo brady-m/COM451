@@ -19,11 +19,11 @@ F6 = -pthread
 
 all: PDP2_Umarbaev
 
-PDP2_Umarbaev: interface.o animate.o gpu_main.o cudaDeviceProp.h
+PDP2_Umarbaev: interface.o animate.o gpu_main.o cudaDeviceProp.h crack.h
 	g++ -o PDP2_Umarbaev interface.o gpu_main.o animate.o interface.o $(F1) $(F2) $(F3) $(F4) $(F5) $(F6)
 
 # do we really need all these flags to compile interface??!!
-interface.o: interface.cpp interface.h gpu_main.cu animate.cu animate.h
+interface.o: interface.h interface.cpp gpu_main.h gpu_main.cu animate.h animate.cu
 	g++ -w -c interface.cpp $(F1) $(F2) $(F3) $(F4)
 
 gpu_main.o: gpu_main.cu gpu_main.h # interface.h

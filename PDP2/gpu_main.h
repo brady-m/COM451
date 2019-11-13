@@ -1,9 +1,9 @@
 #ifndef GPULib
 #define GPULib
 
-// #include <cuda.h>
 #include <cuda.h>
 #include <curand_kernel.h>          // has floor()
+// #include "interface.h"
 
 #define cH2D            cudaMemcpyHostToDevice
 #define cD2D            cudaMemcpyDeviceToDevice

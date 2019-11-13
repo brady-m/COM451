@@ -5,6 +5,7 @@
 **************************************************************************/
 
 #include "gpu_main.h"
+#include "interface.h"
 #include <stdio.h>
 #include <cuda_texture_types.h>
 
@@ -84,7 +85,6 @@ __global__ void updateReds(float* red, int xIdx, int yIdx, double z, double rand
           // x - xIdx+5 ???
   if( (powf((x+5 - xIdx), 2) + powf((y+5 - yIdx), 2)) < powf(pointSize, 2)) red[vecIdx] = randColor;
   else red[vecIdx] *= 0.9;
-
 }
 
 /******************************************************************************/

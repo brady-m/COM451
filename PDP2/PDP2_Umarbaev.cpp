@@ -10,9 +10,8 @@
 *
 *******************************************************************************/
 #include <stdio.h>
-#include <cstdlib>  // includes atoi() and atof()
-#include <string.h> // used by crack.h
 #include "interface.h"
+#include "crack.h"
 #include "cudaDeviceProp.h"
 
 /******************************************************************************/
