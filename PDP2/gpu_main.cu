@@ -5,11 +5,38 @@
 **************************************************************************/
 
 #include "gpu_main.h"
-#include "interface.h"
 #include <stdio.h>
 #include <cuda_texture_types.h>
 
 texture<float, 2> texBlue;
+
+GPU_Palette openPalette(int theWidth, int theHeight)
+{
+  unsigned long theSize = theWidth * theHeight;
+  unsigned long memSize = theSize * sizeof(float);
+
+  float* redmap = (float*) malloc(memSize);
+  float* greenmap = (float*) malloc(memSize);
+  float* bluemap = (float*) malloc(memSize);
+
+  for(int i = 0; i < theSize; i++){
+    bluemap[i] 	= .0;
+    greenmap[i] = .0;
+    redmap[i]   = .0;
+  }
+
+  GPU_Palette P1 = initGPUPalette(theWidth, theHeight);
+
+  cudaMemcpy(P1.red, redmap, memSize, cH2D);
+  cudaMemcpy(P1.green, greenmap, memSize, cH2D);
+  cudaMemcpy(P1.blue, bluemap, memSize, cH2D);
+
+  free(redmap);
+  free(greenmap);
+  free(bluemap);
+
+  return P1;
+}
 
 /******************************************************************************/
 GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
@@ -66,11 +93,9 @@ void freeGPUPalette(GPU_Palette* P)
 /******************************************************************************/
 int updatePalette(GPU_Palette* P, const Point& Point)
 {
-  // for (Point Point : Points.points) {
-    updateReds   <<< P->gBlocks, P->gThreads >>> (P->red,   Point.xIdx, Point.yIdx, Point.z, Point.start_x);  // the randomness of color will be set 
-    updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, Point.xIdx, Point.yIdx, Point.z, Point.start_y);  // based on starting coordinates of the Point
-    updateBlues  <<< P->gBlocks, P->gThreads >>> (P->blue,  Point.xIdx, Point.yIdx, Point.z, Point.start_z);  // because they are initialized randomly
-  // }
+  updateReds   <<< P->gBlocks, P->gThreads >>> (P->red,   Point.xIdx, Point.yIdx, Point.z, Point.start_x);  // the randomness of color will be set 
+  updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, Point.xIdx, Point.yIdx, Point.z, Point.start_y);  // based on starting coordinates of the Point
+  updateBlues  <<< P->gBlocks, P->gThreads >>> (P->blue,  Point.xIdx, Point.yIdx, Point.z, Point.start_z);  // because they are initialized randomly
   return 0;
 }
 

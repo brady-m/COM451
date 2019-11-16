@@ -1,30 +1,8 @@
 #ifndef GPULib
 #define GPULib
 
-#include <cuda.h>
-#include <curand_kernel.h>          // has floor()
-// #include "interface.h"
+#include "struct.h"
 
-#define cH2D            cudaMemcpyHostToDevice
-#define cD2D            cudaMemcpyDeviceToDevice
-#define cD2H            cudaMemcpyDeviceToHost
-
-struct Point;
-
-struct GPU_Palette{
-  unsigned int palette_width;
-  unsigned int palette_height;
-  unsigned long num_pixels;
-
-  dim3 gThreads;
-  dim3 gBlocks;
-
-  float* red;
-  float* green;
-  float* blue;
-};
-
-//GPU_Palette initGPUPalette(unsigned int, unsigned int);
 GPU_Palette openPalette(int, int);
 GPU_Palette initGPUPalette(unsigned int, unsigned int);
 int updatePalette(GPU_Palette*, const Point&);

@@ -1,4 +1,4 @@
-#include "interface.h"
+#include "struct.h"
 
 #include <string.h>
 #include <iostream>
@@ -7,11 +7,6 @@
 int arg_index = 0;
 char *arg_option;
 char *pvcon = NULL;
-
-char crack(int argc, char** argv, char* flags, int ignore_unknowns);
-int usage();
-int setDefaultParams(Parameters& Parameters);
-int viewParameters(const Parameters& Parameters);
 
 char crack(int argc, char** argv, char* flags, int ignore_unknowns)
 {

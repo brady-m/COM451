@@ -2,8 +2,14 @@
 #include "animate.h"
 #include "gpu_main.h"
 
+#include <stdio.h>
+#include <sys/sysinfo.h>
+#include <math.h>
+#include <thread>
+#include <iostream>
+
 double getRandNum() {
-    return double(std::rand()) / (double(RAND_MAX) + 1.0);
+  return double(std::rand()) / (double(RAND_MAX) + 1.0);
 }
 
 /******************************RunMode 1*******************************************/
@@ -57,7 +63,7 @@ void calculateEquation(const std::string mode, Parameters& Parameters)
   }
 }
 
-int runMode1(Parameters& Parameters) 
+int runMode1(Parameters& Parameters)
 {
   std::string mode;
   while (1) {
@@ -93,33 +99,6 @@ int runMode1(Parameters& Parameters)
 
 
 /******************************RunMode 2*******************************************/
-GPU_Palette openPalette(int theWidth, int theHeight)
-{
-  unsigned long theSize = theWidth * theHeight;
-  unsigned long memSize = theSize * sizeof(float);
-
-  float* redmap = (float*) malloc(memSize);
-  float* greenmap = (float*) malloc(memSize);
-  float* bluemap = (float*) malloc(memSize);
-
-  for(int i = 0; i < theSize; i++){
-    bluemap[i] 	= .0;
-    greenmap[i] = .0;
-    redmap[i]   = .0;
-  }
-
-  GPU_Palette P1 = initGPUPalette(theWidth, theHeight);
-
-  cudaMemcpy(P1.red, redmap, memSize, cH2D);
-  cudaMemcpy(P1.green, greenmap, memSize, cH2D);
-  cudaMemcpy(P1.blue, bluemap, memSize, cH2D);
-
-  free(redmap);
-  free(greenmap);
-  free(bluemap);
-
-  return P1;
-}
 
 int drawEquation(GPU_Palette* P1, CPUAnimBitmap* A1, 
                  const Parameters& Parameters, Point& Point) {
@@ -133,7 +112,7 @@ int drawEquation(GPU_Palette* P1, CPUAnimBitmap* A1,
   Point.y = Point.start_y;
   Point.z = Point.start_z;
 
-  for (long i = 1; i < 1000000; i++) {
+  while (true) {
 
     Point.delta_x = t * (Parameters.a * (Point.y - Point.x));
     Point.delta_y = t * ( (Point.x * (Parameters.b - Point.z)) - Point.y);
@@ -161,14 +140,6 @@ int drawEquation(GPU_Palette* P1, CPUAnimBitmap* A1,
 	  // Point.yIdx = floor((Point.y * 18) + 540); // (Y * scalar) + (gHeight/2)
 
     updatePalette(P1, Point);
-
-  }
-
-  return 0;
-}
-
-int drawPal(GPU_Palette* P1, CPUAnimBitmap* A1) {
-  for (long i = 1; i < 1000000; i++) {
     A1->drawPalette();
   }
 
@@ -190,9 +161,7 @@ int runMode2(const Parameters& Parameters, Points& Points)  // ¯\_(ツ)_/¯
     threads[tId] = std::thread(drawEquation, &P1, &animation, std::ref(Parameters), 
                                std::ref(Points.points[tId]));
   }
-  drawPal(&P1, &animation);
-  // threads[NUMBER_OF_POINTS] = std::thread(drawPal, &P1, &animation, std::ref(Points));
-  // drawEquation(&P1, &animation, Parameters, Points.points[NUMBER_OF_POINTS-1]);
+  drawEquation(&P1, &animation, Parameters, Points.points[NUMBER_OF_POINTS-1]);
   for (int tId = 0; tId < NUMBER_OF_POINTS-1; ++tId) {
     threads[tId].join();
   }

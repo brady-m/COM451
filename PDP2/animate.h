@@ -12,6 +12,8 @@
 
 #include "gpu_main.h" // has GPU_PALETTE
 
+struct CPUAnimBitmap;
+
 struct CPUAnimBitmap {
     unsigned char* pixels;
     int width;

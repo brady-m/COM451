@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
   Parameters Parameters;
   Points Points;
   srand((unsigned)time(NULL));
-  
+
   setDefaultParams(Parameters);
 
   // -- get parameters that differ from defaults from command line:
@@ -42,32 +42,23 @@ int main(int argc, char *argv[]){
 
   // run the system depending on runMode
   switch(Parameters.runMode){
-      
-      case 0: 
+
+      case 0:
           if (Parameters.verbose) printf("\n -- running mode 0 function -- \n");
           cudaDeviceProp  prop;
           printCudaDeviceProperties(prop);
-          // RunMode 0 for printing device properties
           break;
-      
-      case 1: 
+
+      case 1:
           if (Parameters.verbose) printf("\n -- running mode 1 function -- \n");
           runMode1(Parameters);
-          // insert function of method for runMode 1 here, for example:
-          // myFunction1(&Parameters);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction1 -- "
           break;
-      
+
       case 2:
           if (Parameters.verbose) printf("\n -- running mode 2 function -- \n");
           runMode2(Parameters, Points);
-          // insert function of method for runMode 1 here, for example:
-          // myFunction2(&Parameters);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction2 -- "
           break;
-      
+
       default: printf("no valid run mode selected\n");
   }
 
