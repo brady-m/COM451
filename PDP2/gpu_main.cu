@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <cuda_texture_types.h>
 
-texture<float, 2> texBlue;
+texture<float, 2> tex;
 
 GPU_Palette openPalette(int theWidth, int theHeight)
 {
@@ -73,7 +73,7 @@ GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
     }
 
   cudaChannelFormatDesc desc = cudaCreateChannelDesc<float>();
-  cudaBindTexture2D(NULL, texBlue, X.blue, desc, X.palette_width, 
+  cudaBindTexture2D(NULL, tex, X.blue, desc, X.palette_width, 
                     X.palette_width, sizeof(float) * X.palette_width);
 
   return X;
@@ -82,7 +82,7 @@ GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
 /******************************************************************************/
 void freeGPUPalette(GPU_Palette* P)
 {
-  cudaUnbindTexture(texBlue);
+  cudaUnbindTexture(tex);
 
   cudaFree(P->red);
   cudaFree(P->green);
@@ -91,60 +91,91 @@ void freeGPUPalette(GPU_Palette* P)
 
 
 /******************************************************************************/
-int updatePalette(GPU_Palette* P, const Point& Point)
+int updatePalette(GPU_Palette* P, const Points& Points)
 {
-  updateReds   <<< P->gBlocks, P->gThreads >>> (P->red,   Point.xIdx, Point.yIdx, Point.z, Point.start_x);  // the randomness of color will be set 
-  updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, Point.xIdx, Point.yIdx, Point.z, Point.start_y);  // based on starting coordinates of the Point
-  updateBlues  <<< P->gBlocks, P->gThreads >>> (P->blue,  Point.xIdx, Point.yIdx, Point.z, Point.start_z);  // because they are initialized randomly
+  for (Point Point : Points.points) {
+    updateReds   <<< P->gBlocks, P->gThreads >>> (P->red,   Point);
+    updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, Point);
+    updateBlues  <<< P->gBlocks, P->gThreads >>> (P->blue,  Point);
+  }
   return 0;
 }
 
 /******************************************************************************/
-__global__ void updateReds(float* red, int xIdx, int yIdx, double z, double randColor){
+__global__ void updateReds(float* red, Point Point){
 
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
 
-  int pointSize = round(z*0.65);
+  int pointSize = round(Point.z*0.65);
           // x - xIdx+5 ???
-  if( (powf((x+5 - xIdx), 2) + powf((y+5 - yIdx), 2)) < powf(pointSize, 2)) red[vecIdx] = randColor;
-  else red[vecIdx] *= 0.9;
-}
-
-/******************************************************************************/
-__global__ void updateGreens(float* green, int xIdx, int yIdx, double z, double randColor){
-
-  int x = threadIdx.x + (blockIdx.x * blockDim.x);
-  int y = threadIdx.y + (blockIdx.y * blockDim.y);
-  int vecIdx = x + (y * blockDim.x * gridDim.x);
-
-  int pointSize = round(z*0.65);
-
-  if( (powf((x+5 - xIdx), 2) + powf((y+5 - yIdx), 2)) < powf(pointSize, 2)) green[vecIdx] = randColor;
-  else green[vecIdx] *= 0.85;
-}
-
-/******************************************************************************/
-__global__ void updateBlues(float* blue, int xIdx, int yIdx, double z, double randColor){
-
-  int x = threadIdx.x + (blockIdx.x * blockDim.x);
-  int y = threadIdx.y + (blockIdx.y * blockDim.y);
-  int vecIdx = x + (y * blockDim.x * gridDim.x);
-
-  int pointSize = round(z*0.65);
-
-  if( (powf((x+5 - xIdx), 2) + powf((y+5 - yIdx), 2)) < powf(pointSize, 2)) blue[vecIdx] = randColor;
+  if( (powf((x+5 - Point.xIdx), 2) + powf((y+5 - Point.yIdx), 2)) < powf(pointSize, 2)) 
+    red[vecIdx] = Point.red;
   else {
-    float t, l, c, r, b;
-    float speed = 0.25;
-    t = tex2D(texBlue,x,y-pointSize/2);       
-    l = tex2D(texBlue,x-pointSize/2,y);        
-    c = tex2D(texBlue,x,y);        
-    r = tex2D(texBlue,x+pointSize/2,y);        
-    b = tex2D(texBlue,x,y+pointSize/2);      
-    blue[vecIdx] = c + speed * (t + b + r + l - 4 * c);
-    // blue[vecIdx] *= 0.99;
+    if (Point.color_heatTransfer == 0) {
+      float t, l, c, r, b;
+      float speed = 0.1;
+      t = tex2D(tex,x,y-pointSize/2);       
+      l = tex2D(tex,x-pointSize/2,y);        
+      c = tex2D(tex,x,y);        
+      r = tex2D(tex,x+pointSize/2,y);        
+      b = tex2D(tex,x,y+pointSize/2);      
+      red[vecIdx] = c + speed * (t + b + r + l - 4 * c);
+    }
+    // red[vecIdx] *= Point.red_fadeScale;
+  }
+}
+
+/******************************************************************************/
+__global__ void updateGreens(float* green, Point Point){
+
+  int x = threadIdx.x + (blockIdx.x * blockDim.x);
+  int y = threadIdx.y + (blockIdx.y * blockDim.y);
+  int vecIdx = x + (y * blockDim.x * gridDim.x);
+
+  int pointSize = round(Point.z*0.65);
+
+  if( (powf((x+5 - Point.xIdx), 2) + powf((y+5 - Point.yIdx), 2)) < powf(pointSize, 2)) 
+    green[vecIdx] = Point.green;
+  else {
+    if (Point.color_heatTransfer == 1) {
+      float t, l, c, r, b;
+      float speed = 0.45;
+      t = tex2D(tex,x,y-pointSize/2);       
+      l = tex2D(tex,x-pointSize/2,y);        
+      c = tex2D(tex,x,y);        
+      r = tex2D(tex,x+pointSize/2,y);        
+      b = tex2D(tex,x,y+pointSize/2);      
+      green[vecIdx] = c + speed * (t + b + r + l - 4 * c);
+    }
+    // green[vecIdx] *= Point.green_fadeScale;
+  }
+}
+
+/******************************************************************************/
+__global__ void updateBlues(float* blue, Point Point){
+
+  int x = threadIdx.x + (blockIdx.x * blockDim.x);
+  int y = threadIdx.y + (blockIdx.y * blockDim.y);
+  int vecIdx = x + (y * blockDim.x * gridDim.x);
+
+  int pointSize = round(Point.z*0.65);
+
+  if( (powf((x+5 - Point.xIdx), 2) + powf((y+5 - Point.yIdx), 2)) < powf(pointSize, 2)) 
+    blue[vecIdx] = Point.blue;
+  else {
+    if (Point.color_heatTransfer == 2) {    
+      float t, l, c, r, b;
+      float speed = 0.25;
+      t = tex2D(tex,x,y-pointSize/2);       
+      l = tex2D(tex,x-pointSize/2,y);        
+      c = tex2D(tex,x,y);        
+      r = tex2D(tex,x+pointSize/2,y);        
+      b = tex2D(tex,x,y+pointSize/2);      
+      blue[vecIdx] = c + speed * (t + b + r + l - 4 * c);
+    }
+    // blue[vecIdx] *= Point.blue_fadeScale;
   }
 }
 /******************************************************************************/

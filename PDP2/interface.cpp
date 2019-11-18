@@ -100,49 +100,33 @@ int runMode1(Parameters& Parameters)
 
 /******************************RunMode 2*******************************************/
 
-int drawEquation(GPU_Palette* P1, CPUAnimBitmap* A1, 
-                 const Parameters& Parameters, Point& Point) {
+int drawEquation(const Parameters& Parameters, Point& Point) {
 
-  srand((unsigned)time(NULL));
-  Point.start_x = getRandNum();
-  Point.start_y = getRandNum();
-  Point.start_z = getRandNum();
+  Point.delta_x = t * (Parameters.a * (Point.y - Point.x));
+  Point.delta_y = t * ( (Point.x * (Parameters.b - Point.z)) - Point.y);
+  Point.delta_z = t * ( (Point.x * Point.y) - (Parameters.c * Point.z) );
+  
+  Point.x += Point.delta_x;
+  Point.y += Point.delta_y;
+  Point.z += Point.delta_z;
 
-  Point.x = Point.start_x;
-  Point.y = Point.start_y;
-  Point.z = Point.start_z;
+  static float minX = -20.0;
+  static float maxX = 20.0;
+  static float minY = -30.0;
+  static float maxY = 30.0;
 
-  while (true) {
+  static float xRange = fabs(maxX - minX);
+  static float xScalar = 0.9 * (gWIDTH/xRange);
 
-    Point.delta_x = t * (Parameters.a * (Point.y - Point.x));
-    Point.delta_y = t * ( (Point.x * (Parameters.b - Point.z)) - Point.y);
-    Point.delta_z = t * ( (Point.x * Point.y) - (Parameters.c * Point.z) );
-    
-    Point.x += Point.delta_x;
-    Point.y += Point.delta_y;
-    Point.z += Point.delta_z;
+  static float yRange = fabs(maxY - minY);
+  static float yScalar = 0.9 * (gHEIGHT/yRange);
 
-    static float minX = -50.0;
-    static float maxX = 50.0;
-    static float minY = -60.0;
-    static float maxY = 60.0;
+  Point.xIdx = round(xScalar * (Point.x - minX));
+  Point.yIdx = round(yScalar * (Point.y - minY));
 
-    static float xRange = fabs(maxX - minX);
-    static float xScalar = 0.9 * (gWIDTH/xRange);
-
-    static float yRange = fabs(maxY - minY);
-    static float yScalar = 0.9 * (gHEIGHT/yRange);
-
-    Point.xIdx = round(xScalar * (Point.x - minX));
-    Point.yIdx = round(yScalar * (Point.y - minY));
-
-	  // Point.xIdx = floor((Point.x * 32) + 960); // (X * scalar) + (gWidth/2)
-	  // Point.yIdx = floor((Point.y * 18) + 540); // (Y * scalar) + (gHeight/2)
-
-    updatePalette(P1, Point);
-    A1->drawPalette();
-  }
-
+  // Point.xIdx = floor((Point.x * 32) + 960); // (X * scalar) + (gWidth/2)
+  // Point.yIdx = floor((Point.y * 18) + 540); // (Y * scalar) + (gHeight/2)
+  
   return 0;
 }
 
@@ -155,15 +139,44 @@ int runMode2(const Parameters& Parameters, Points& Points)  // ¯\_(ツ)_/¯
   cudaMalloc((void**) &animation.dev_bitmap, animation.image_size());
   animation.initAnimation();
 
-  std::thread threads[NUMBER_OF_POINTS];
+  srand((unsigned)time(NULL));
+  for (Point& Point : Points.points) {
+    Point.start_x = getRandNum();
+    Point.start_y = getRandNum();
+    Point.start_z = getRandNum();
 
-  for (int tId = 0; tId < NUMBER_OF_POINTS-1; ++tId) {                    
-    threads[tId] = std::thread(drawEquation, &P1, &animation, std::ref(Parameters), 
-                               std::ref(Points.points[tId]));
+    Point.x = Point.start_x*20;
+    Point.y = Point.start_y*20;
+    Point.z = Point.start_z*20;
+
+    Point.red = Point.start_x;
+    Point.green = Point.start_y;
+    Point.blue = Point.start_z;
+
+    Point.red_fadeScale = Point.start_x > 0.5 ? Point.start_x : Point.start_x+0.5;
+    Point.green_fadeScale = Point.start_y > 0.5 ? Point.start_y : Point.start_y+0.5;
+    Point.blue_fadeScale = Point.start_z > 0.5 ? Point.start_z : Point.start_z+0.5;
+
+    if((Point.red >= Point.green) && (Point.red >= Point.blue))
+      Point.color_heatTransfer = 0;
+    else if (Point.green >= Point.blue)
+      Point.color_heatTransfer = 1;
+    else
+      Point.color_heatTransfer = 2;
   }
-  drawEquation(&P1, &animation, Parameters, Points.points[NUMBER_OF_POINTS-1]);
-  for (int tId = 0; tId < NUMBER_OF_POINTS-1; ++tId) {
-    threads[tId].join();
+
+  std::thread threads[NUMBER_OF_POINTS];
+  while (true) {
+
+    for (int tId = 0; tId < NUMBER_OF_POINTS; ++tId) {
+      threads[tId] = std::thread(drawEquation, std::ref(Parameters), std::ref(Points.points[tId]));
+    }
+    // drawEquation(Parameters, Points.points[NUMBER_OF_POINTS]);
+    for (int tId = 0; tId < NUMBER_OF_POINTS; ++tId) {
+      threads[tId].join();
+    }
+    updatePalette(&P1, Points);
+    (&animation)->drawPalette();
   }
 
   freeGPUPalette(&P1);

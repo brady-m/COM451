@@ -10,7 +10,7 @@
 
 #define ITERATION_NUM     10000000              // iteration number
 #define TEST_NUM          8                          // number for random starting points
-#define NUMBER_OF_POINTS  1
+#define NUMBER_OF_POINTS  5
 #define gWIDTH            1920
 #define gHEIGHT           1080
 
@@ -32,6 +32,9 @@ struct Point {
   double delta_x, delta_y, delta_z;
   double start_x, start_y, start_z;
   int xIdx, yIdx;
+  double red,           blue,           green;
+  double red_fadeScale, blue_fadeScale, green_fadeScale;
+  int color_heatTransfer;
 };
 
 struct Points {
