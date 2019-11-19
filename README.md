@@ -1,1 +1,1 @@
-# cuda-visualizer
+zachem zashel suda?
