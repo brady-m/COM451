@@ -8,7 +8,10 @@
 #include <stdio.h>
 #include <cuda_texture_types.h>
 
-texture<float, 2> tex;
+texture<float, 2> texRed;
+texture<float, 2> texGreen;
+texture<float, 2> texBlue;
+
 
 GPU_Palette openPalette(int theWidth, int theHeight)
 {
@@ -60,20 +63,24 @@ GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
   if(err != cudaSuccess){
     printf("cuda error allocating red = %s\n", cudaGetErrorString(err));
     exit(EXIT_FAILURE);
-    }
+  }
   cudaMalloc((void**) &X.green, X.num_pixels * sizeof(float)); // g
   if(err != cudaSuccess){
     printf("cuda error allocating green = %s\n", cudaGetErrorString(err));
     exit(EXIT_FAILURE);
-    }
+  }
   cudaMalloc((void**) &X.blue, X.num_pixels * sizeof(float));  // b
   if(err != cudaSuccess){
     printf("cuda error allocating blue = %s\n", cudaGetErrorString(err));
     exit(EXIT_FAILURE);
-    }
+  }
 
   cudaChannelFormatDesc desc = cudaCreateChannelDesc<float>();
-  cudaBindTexture2D(NULL, tex, X.blue, desc, X.palette_width, 
+  cudaBindTexture2D(NULL, texRed, X.red, desc, X.palette_width, 
+                    X.palette_width, sizeof(float) * X.palette_width);
+  cudaBindTexture2D(NULL, texGreen, X.green, desc, X.palette_width, 
+                    X.palette_width, sizeof(float) * X.palette_width);
+  cudaBindTexture2D(NULL, texBlue, X.blue, desc, X.palette_width, 
                     X.palette_width, sizeof(float) * X.palette_width);
 
   return X;
@@ -82,7 +89,9 @@ GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
 /******************************************************************************/
 void freeGPUPalette(GPU_Palette* P)
 {
-  cudaUnbindTexture(tex);
+  cudaUnbindTexture(texRed);
+  cudaUnbindTexture(texGreen);
+  cudaUnbindTexture(texBlue);
 
   cudaFree(P->red);
   cudaFree(P->green);
@@ -115,15 +124,17 @@ __global__ void updateReds(float* red, Point Point){
   else {
     if (Point.color_heatTransfer == 0) {
       float t, l, c, r, b;
-      float speed = 0.1;
-      t = tex2D(tex,x,y-pointSize/2);       
-      l = tex2D(tex,x-pointSize/2,y);        
-      c = tex2D(tex,x,y);        
-      r = tex2D(tex,x+pointSize/2,y);        
-      b = tex2D(tex,x,y+pointSize/2);      
+      float speed = 0.25;
+      t = tex2D(texRed,x,y-pointSize/2);       
+      l = tex2D(texRed,x-pointSize/2,y);        
+      c = tex2D(texRed,x,y);        
+      r = tex2D(texRed,x+pointSize/2,y);        
+      b = tex2D(texRed,x,y+pointSize/2);      
       red[vecIdx] = c + speed * (t + b + r + l - 4 * c);
+    } 
+    else {
+      red[vecIdx] *= 0.99;
     }
-    // red[vecIdx] *= Point.red_fadeScale;
   }
 }
 
@@ -141,15 +152,17 @@ __global__ void updateGreens(float* green, Point Point){
   else {
     if (Point.color_heatTransfer == 1) {
       float t, l, c, r, b;
-      float speed = 0.45;
-      t = tex2D(tex,x,y-pointSize/2);       
-      l = tex2D(tex,x-pointSize/2,y);        
-      c = tex2D(tex,x,y);        
-      r = tex2D(tex,x+pointSize/2,y);        
-      b = tex2D(tex,x,y+pointSize/2);      
+      float speed = 0.25;
+      t = tex2D(texGreen,x,y-pointSize/2);       
+      l = tex2D(texGreen,x-pointSize/2,y);        
+      c = tex2D(texGreen,x,y);        
+      r = tex2D(texGreen,x+pointSize/2,y);        
+      b = tex2D(texGreen,x,y+pointSize/2);      
       green[vecIdx] = c + speed * (t + b + r + l - 4 * c);
+    } 
+    else {
+      green[vecIdx] *= 0.99;
     }
-    // green[vecIdx] *= Point.green_fadeScale;
   }
 }
 
@@ -168,14 +181,16 @@ __global__ void updateBlues(float* blue, Point Point){
     if (Point.color_heatTransfer == 2) {    
       float t, l, c, r, b;
       float speed = 0.25;
-      t = tex2D(tex,x,y-pointSize/2);       
-      l = tex2D(tex,x-pointSize/2,y);        
-      c = tex2D(tex,x,y);        
-      r = tex2D(tex,x+pointSize/2,y);        
-      b = tex2D(tex,x,y+pointSize/2);      
+      t = tex2D(texBlue,x,y-pointSize/2);       
+      l = tex2D(texBlue,x-pointSize/2,y);        
+      c = tex2D(texBlue,x,y);        
+      r = tex2D(texBlue,x+pointSize/2,y);        
+      b = tex2D(texBlue,x,y+pointSize/2);      
       blue[vecIdx] = c + speed * (t + b + r + l - 4 * c);
+    } 
+    else {
+      blue[vecIdx] *= 0.99;
     }
-    // blue[vecIdx] *= Point.blue_fadeScale;
   }
 }
 /******************************************************************************/

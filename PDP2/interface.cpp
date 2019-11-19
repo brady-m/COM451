@@ -100,6 +100,32 @@ int runMode1(Parameters& Parameters)
 
 /******************************RunMode 2*******************************************/
 
+int initStartingPoints(Points& Points) {
+
+  for (Point& Point : Points.points) {
+    Point.start_x = getRandNum();
+    Point.start_y = getRandNum();
+    Point.start_z = getRandNum();
+
+    Point.x = Point.start_x*20;
+    Point.y = Point.start_y*20;
+    Point.z = Point.start_z*20;
+
+    Point.red = Point.start_x;
+    Point.green = Point.start_y;
+    Point.blue = Point.start_z;
+
+    if((Point.red >= Point.green) && (Point.red >= Point.blue))
+      Point.color_heatTransfer = 0;
+    else if (Point.green >= Point.blue)
+      Point.color_heatTransfer = 1;
+    else
+      Point.color_heatTransfer = 2;
+  }
+
+  return 0;
+}
+
 int drawEquation(const Parameters& Parameters, Point& Point) {
 
   Point.delta_x = t * (Parameters.a * (Point.y - Point.x));
@@ -140,30 +166,7 @@ int runMode2(const Parameters& Parameters, Points& Points)  // ¯\_(ツ)_/¯
   animation.initAnimation();
 
   srand((unsigned)time(NULL));
-  for (Point& Point : Points.points) {
-    Point.start_x = getRandNum();
-    Point.start_y = getRandNum();
-    Point.start_z = getRandNum();
-
-    Point.x = Point.start_x*20;
-    Point.y = Point.start_y*20;
-    Point.z = Point.start_z*20;
-
-    Point.red = Point.start_x;
-    Point.green = Point.start_y;
-    Point.blue = Point.start_z;
-
-    Point.red_fadeScale = Point.start_x > 0.5 ? Point.start_x : Point.start_x+0.5;
-    Point.green_fadeScale = Point.start_y > 0.5 ? Point.start_y : Point.start_y+0.5;
-    Point.blue_fadeScale = Point.start_z > 0.5 ? Point.start_z : Point.start_z+0.5;
-
-    if((Point.red >= Point.green) && (Point.red >= Point.blue))
-      Point.color_heatTransfer = 0;
-    else if (Point.green >= Point.blue)
-      Point.color_heatTransfer = 1;
-    else
-      Point.color_heatTransfer = 2;
-  }
+  initStartingPoints(Points);
 
   std::thread threads[NUMBER_OF_POINTS];
   while (true) {
@@ -171,7 +174,6 @@ int runMode2(const Parameters& Parameters, Points& Points)  // ¯\_(ツ)_/¯
     for (int tId = 0; tId < NUMBER_OF_POINTS; ++tId) {
       threads[tId] = std::thread(drawEquation, std::ref(Parameters), std::ref(Points.points[tId]));
     }
-    // drawEquation(Parameters, Points.points[NUMBER_OF_POINTS]);
     for (int tId = 0; tId < NUMBER_OF_POINTS; ++tId) {
       threads[tId].join();
     }

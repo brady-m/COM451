@@ -33,7 +33,6 @@ struct Point {
   double start_x, start_y, start_z;
   int xIdx, yIdx;
   double red,           blue,           green;
-  double red_fadeScale, blue_fadeScale, green_fadeScale;
   int color_heatTransfer;
 };
 
