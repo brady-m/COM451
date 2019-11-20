@@ -5,16 +5,13 @@
 
 #include "gpu_main.h"
 #include "animate.h"
+#include "point.h"
 
 void drawAnimation();
 
 // move these to interface.h library, and make class
 int runIt(GPU_Palette* P1,  CPUAnimBitmap* A1);
-struct APoint{
-	float x;
-	float y;
-	float z;
-};
+
 
 
 //int runMode0(void);

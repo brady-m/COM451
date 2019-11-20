@@ -18,9 +18,13 @@
 #define BackgroundGreen 0.0f
 #define BackgroundBlue 0.0f
 
-#define AttractorRed 0.545f
-#define AttractorGreen 0.847f
-#define AttractorBlue 0.741f
+// #define AttractorRed 0.545f
+// #define AttractorGreen 0.847f
+// #define AttractorBlue 0.741f
+
+#define AttractorRed 0.709f
+#define AttractorGreen 0.439f
+#define AttractorBlue 0.439f
 
 #define zInitialSize 3
 #define zScale 1.1f
@@ -87,14 +91,14 @@ void freeGPUPalette(GPU_Palette* P)
 }
 
 /******************************************************************************/
-int updatePalette(GPU_Palette* P, int xIdx, int yIdx, float zIdx)
+int updatePalette(GPU_Palette* P, APoint (&points)[5])
 // int updatePalette(GPU_Palette* P, int xIdx, int yIdx)
 {
-
-    updateReds<<<P->gBlocks, P->gThreads>>>(P->red, xIdx, yIdx, zIdx);
-    updateGreens<<<P->gBlocks, P->gThreads>>>(P->green, xIdx, yIdx, zIdx);
-    updateBlues<<<P->gBlocks, P->gThreads>>>(P->blue, xIdx, yIdx, zIdx);
-
+    for (int i = 0; i < 5; i++) {
+        updateReds<<<P->gBlocks, P->gThreads>>>(P->red, points[i].xIdx, points[i].yIdx, points[i].z);
+        updateGreens<<<P->gBlocks, P->gThreads>>>(P->green, points[i].xIdx, points[i].yIdx, points[i].z);
+        updateBlues<<<P->gBlocks, P->gThreads>>>(P->blue, points[i].xIdx, points[i].yIdx, points[i].z);
+    }
     return 0;
 }
 
