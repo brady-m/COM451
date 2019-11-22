@@ -2,7 +2,7 @@
 #include <thread>
 #include <math.h>
 #include <vector>
-#include "attractor.h"
+#include "PDP1_KulievIsa.h"
 using namespace std;
 unsigned gNumThreads = 1;
 
@@ -41,8 +41,8 @@ int runIt(int tid)
           //Uncomment if you want to see the good coordinates
           //printf("Good coordinate are x= %f, y=%f, z= %f \n",x,y,z);
           bestCoordinates.push_back(x);
-	  bestCoordinates.push_back(y);
-	  bestCoordinates.push_back(z);
+	        bestCoordinates.push_back(y);
+	        bestCoordinates.push_back(z);
         }
       }      
     }    
@@ -59,7 +59,7 @@ std::vector<double> calculateAttractor(int multithread)
     MULTITHREAD = multithread;
   }
 
-  time_t theStart, theEnd;
+  time_t theStart, theEnd;std::thread::hardware_concurrency();
   time(&theStart);
   gNumThreads = std::thread::hardware_concurrency();
   if(MULTITHREAD)

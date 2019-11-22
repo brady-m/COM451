@@ -1,6 +1,6 @@
 /**************************************************************************
 *
-*     set up GPU for processing
+*     set up GPU for processing;
 *
 **************************************************************************/
 
@@ -10,8 +10,10 @@
 
 #include <cuda_runtime.h>
 
+#define zInitialSize 3
+#define zScale 1.1f
 #define gScalar 0.2
-texture<float, 2, cudaReadModeElementType> texGreen;
+texture<float, 2> texGreen;
 
 /******************************************************************************/
 GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
@@ -50,9 +52,9 @@ GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
   float *devPtr;
   size_t size=64*sizeof(float);
   cudaMalloc((void **) &devPtr, size);
-  
+
   cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-  err = cudaBindTexture(NULL, &texGreen, devPtr, &channelDesc, size);
+  err = cudaBindTexture2D(NULL, texGreen, X.green, channelDesc, imageWidth, imageHeight, sizeof(float) * imageWidth);
   if (err != cudaSuccess) {
     printf("cuda error bind texture = %s\n", cudaGetErrorString(err));
     exit(EXIT_FAILURE);
@@ -89,8 +91,8 @@ __global__ void updateReds(float* red, int xIdx, int yIdx, float z){
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
 
-  if ((xIdx < x + size) && (xIdx > x - size) && (yIdx < y + size) && (yIdx > y - size)) {
-    red[vecIdx] = 1.0;
+  if (sqrtf(powf((x - xIdx), 2) + powf((y - yIdx), 2)) < size) {
+    red[vecIdx] = 0.5;
   } else {
     red[vecIdx] *= .98;
   }
@@ -102,17 +104,28 @@ __global__ void updateGreens(float* green, int xIdx, int yIdx, float z){
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
-  if ((xIdx < x + size) && (xIdx > x - size) && (yIdx < y + size) && (yIdx > y - size)) {
-    green[vecIdx] = 0.5;
+  float topPixel, leftPixel, centralPixel, rightPixel, bottomPixel;
+
+  topPixel = tex2D(texGreen, x, y + 1);
+  leftPixel = tex2D(texGreen, x - 1, y);
+  centralPixel = tex2D(texGreen, x, y);
+  rightPixel = tex2D(texGreen, x + 1, y);
+  bottomPixel = tex2D(texGreen, x, y - 1);
+  if (sqrtf(powf((x - xIdx), 2) + powf((y - yIdx), 2)) < size) {
+       green[vecIdx] = 0.8;
   } else {
-    float acc = 0.0;
-    for (int i = -5;i <= 5;i++) {
-      for (int j = -5;j <= 5;j++) {
-        acc += tex2D(texGreen, x + i, y + j);
+      float meanHeat = (topPixel + bottomPixel + rightPixel + leftPixel + centralPixel) / (5 - 0.05);
+      if (meanHeat >= 0.8) {
+          green[vecIdx] = 0.8 / 4;
+      } else {
+          green[vecIdx] = meanHeat;
       }
-    }
-    acc /= 121.0;
-    green[vecIdx] = acc;
+      green[vecIdx] -= 0.01 * green[vecIdx];
+
+      if (green[vecIdx] < 0.0)
+          green[vecIdx] = 0.0;
+      if (green[vecIdx] > 0.8)
+          green[vecIdx] = 0.8;
   }
 }
 
@@ -122,8 +135,8 @@ __global__ void updateBlues(float* blue, int xIdx, int yIdx, float z){
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
-  if ((xIdx < x + size) && (xIdx > x - size) && (yIdx < y + size) && (yIdx > y - size)) {
-    blue[vecIdx] = 0.6;
+  if (sqrtf(powf((x - xIdx), 2) + powf((y - yIdx), 2)) < size) {
+    blue[vecIdx] = 1.0;
   } else {
     blue[vecIdx] *= .93;
   }

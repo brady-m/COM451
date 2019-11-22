@@ -6,13 +6,15 @@
 *
 *******************************************************************************/
 #include <stdio.h>
-
+#include <thread>
 #include "gpu_main.h"
 #include "animate.h"
 #include "visualizeAttractor.h"
 #include <cmath>
 #include <vector>
+using namespace std;
 // move these to interface.h library, and make class
+#define NUM_ATTRACTORS 2
 int runIt(GPU_Palette* P1,  CPUAnimBitmap* A1);
 struct APoint{
 	float x;
@@ -27,13 +29,7 @@ double startY= 0.5;
 double startZ= 0.5;
 
 /******************************************************************************/
-int visualizeAttractor(std::vector<double> startingCoordinates){
-
-	if(startingCoordinates.size() > 0){
-	startX = startingCoordinates[0];
-	startY = startingCoordinates[1];
-	startZ = startingCoordinates[2];
-	}
+int visualizeAttractor(){
 
 	GPU_Palette P1;
 	P1 = openPalette(gWIDTH, gHEIGHT); // width, height of palette as args
@@ -60,8 +56,8 @@ GPU_Palette openPalette(int theWidth, int theHeight)
 
 	for(int i = 0; i < theSize; i++){
 		bluemap[i] 	= .0;
-  	greenmap[i] = .0;
-  	redmap[i]   = .0;
+  		greenmap[i] = .0;
+  		redmap[i]   = .0;
 	}
 
 	GPU_Palette P1 = initGPUPalette(theWidth, theHeight);
@@ -90,9 +86,18 @@ int runIt(GPU_Palette* P1, CPUAnimBitmap* A1){
 	float sigma = 0.2;
 	float rho = 0.2;
 	float beta = 5.7;
+	srand(time(NULL));
 
-	int xIdx;
-	int yIdx;
+	std::thread threads[NUM_ATTRACTORS];
+	int xIdx[NUM_ATTRACTORS];
+	int yIdx[NUM_ATTRACTORS];
+	int randomX[NUM_ATTRACTORS],randomY[NUM_ATTRACTORS];
+
+	for(int i = 0;i<NUM_ATTRACTORS;i++)
+	{
+		randomX[i] = (rand() % (gWIDTH - 400)) + 150;
+		randomY[i] = (rand() % (gHEIGHT - 300)) + 100;
+	}
 
 	for (long i = 1; i< 100000; i++)
 	{
@@ -104,13 +109,24 @@ int runIt(GPU_Palette* P1, CPUAnimBitmap* A1){
 		thePoint.y += theChange.y;
 		thePoint.z += theChange.z;
 
-		xIdx = floor((thePoint.x * 32) + 960); // (X * scalar) + (gWidth/2)
-		yIdx = floor((thePoint.y * 18) + 540); // (Y * scalar) + (gHeight/2)
 
-		updatePalette(P1, xIdx, yIdx);
+		for(int j = 0; j<NUM_ATTRACTORS;j++){
+			xIdx[j] = floor((thePoint.x * 32) + randomX[j]); // (X * scalar) + (gWidth/2)
+			yIdx[j] = floor((thePoint.y * 18) + randomY[j]); // (Y * scalar) + (gHeight/2)
+
+			threads[j] = std::thread(updatePalette,P1,xIdx[j],yIdx[j],thePoint.z);
+		}
+
+		
+		for(int t_id = 0; t_id < NUM_ATTRACTORS;t_id++)
+		{
+			threads[t_id].join();
+		}
+		
     	A1->drawPalette();
 
 	}
+	
 
 	return 0;
 }

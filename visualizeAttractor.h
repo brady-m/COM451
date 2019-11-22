@@ -4,8 +4,9 @@
 #include "gpu_main.h"
 #include "animate.h"
 #include <vector>
+#include <thread>
 using namespace std;
 
-int visualizeAttractor(std::vector<double>);
+int visualizeAttractor();
 
 #endif

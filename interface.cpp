@@ -15,7 +15,7 @@
 #include <cuda_runtime_api.h>
 #include <cuda.h>
 #include <vector>
-#include "attractor.h"
+#include "PDP1_KulievIsa.h"
 #include "visualizeAttractor.h"
 /******************************************************************************/
 int main(int argc, char *argv[]){
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
   // run the system depending on runMode
   switch(PARAMS.runMode){
       case 0:
-          if (PARAMS.verbose) printf("\n -- RunMode = 0. Information about PC. \n");
+          if (PARAMS.verbose) printf("\n RunMode = 0. Information about PC. \n");
           ShowDeviceInformation();
           break;
       case 1:
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
 
       case 2:
           if (PARAMS.verbose) printf("\n -- RunMode = 2. Visualize attractor -- \n");
-          visualizeAttractor(bestCoordinates);
+          visualizeAttractor();
           break;
 
       case 3:
