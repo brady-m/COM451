@@ -11,13 +11,16 @@
 //int runIt(GPU_Palette* P1,  CPUAnimBitmap* A1);
 //int usage();
 int runIt(GPU_Palette* P1,  CPUAnimBitmap* A1);
-struct APoint{
-	float x;
-	float y;
-	float z;
+
+struct AParams {
+  bool  verbose;
+  int   runMode;
+  int   myParam1;
+  float myParam2;
+	double a, b, c;
 };
 void printInformation();
-void drawGraph();
+void drawGraph(const AParams& params);
 // struct cudaDeviceProp {
 //   char name[256];
 //   size_t totalGlobalMem;

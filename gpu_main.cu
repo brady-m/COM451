@@ -7,11 +7,14 @@
 #include <cuda.h>
 #include <stdio.h>
 #include "gpu_main.h"
-
+#include <cuda_texture_types.h>
 #include <cuda_runtime.h>
+#include "interface2.h"
 
 #define gScalar 0.2
-texture<float, 2, cudaReadModeElementType> texBlue;
+texture<float, 2> texBlue;
+texture<float, 2> texRed;
+texture<float, 2> texGreen;
 //define texBlue as texture memory here
 
 /******************************************************************************/
@@ -48,11 +51,21 @@ GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
     exit(EXIT_FAILURE);
   }
 
-  float *devPtr;
-  size_t size=64*sizeof(float);
-  cudaMalloc((void **) &devPtr, size);
   cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
-  err = cudaBindTexture(NULL, &texBlue, devPtr, &channelDesc, size);
+  err = cudaBindTexture2D(NULL, texBlue, X.blue, channelDesc, X.palette_width,
+                          X.palette_width, sizeof(float) * X.palette_width);
+  if (err != cudaSuccess) {
+    printf("cuda error bind texture = %s\n", cudaGetErrorString(err));
+    exit(EXIT_FAILURE);
+  }
+  err = cudaBindTexture2D(NULL, texRed, X.red, channelDesc, X.palette_width,
+                          X.palette_width, sizeof(float) * X.palette_width);
+  if (err != cudaSuccess) {
+    printf("cuda error bind texture = %s\n", cudaGetErrorString(err));
+    exit(EXIT_FAILURE);
+  }
+  err = cudaBindTexture2D(NULL, texGreen, X.green, channelDesc, X.palette_width,
+                          X.palette_width, sizeof(float) * X.palette_width);
   if (err != cudaSuccess) {
     printf("cuda error bind texture = %s\n", cudaGetErrorString(err));
     exit(EXIT_FAILURE);
@@ -65,6 +78,9 @@ GPU_Palette initGPUPalette(unsigned int imageWidth, unsigned int imageHeight)
 /******************************************************************************/
 void freeGPUPalette(GPU_Palette* P)
 {
+  cudaUnbindTexture(texRed);
+  cudaUnbindTexture(texGreen);
+  cudaUnbindTexture(texBlue);
   cudaFree(P->red);
   cudaFree(P->green);
   cudaFree(P->blue);
@@ -72,62 +88,84 @@ void freeGPUPalette(GPU_Palette* P)
 
 
 /******************************************************************************/
-int updatePalette(GPU_Palette* P, int xIdx, int yIdx, float z)
+int updatePalette(GPU_Palette* P, APoint (&points)[5])
 {
-
-  updateReds <<< P->gBlocks, P->gThreads >>> (P->red, xIdx, yIdx, z);
-  updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, xIdx, yIdx, z);
-	updateBlues <<< P->gBlocks, P->gThreads >>> (P->blue, xIdx, yIdx, z);
-
+  for (int i = 0;i < 5;i++) {
+    updateReds <<< P->gBlocks, P->gThreads >>> (P->red, points[i].xIdx, points[i].yIdx, points[i].z, points[i].color_heatTransfer);
+    updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, points[i].xIdx, points[i].yIdx, points[i].z, points[i].color_heatTransfer);
+  	updateBlues <<< P->gBlocks, P->gThreads >>> (P->blue, points[i].xIdx, points[i].yIdx, points[i].z, points[i].color_heatTransfer);
+  }
   return 0;
 }
 
 /******************************************************************************/
-__global__ void updateReds(float* red, int xIdx, int yIdx, float z){
+__global__ void updateReds(float* red, int xIdx, int yIdx, float z, int colorTransfer){
 
   int pS = (int)(5 + (z * gScalar));
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
-
+  int pointSize = round(z*0.65);
   if ((xIdx < x + pS) && (xIdx > x - pS) && (yIdx < y + pS) && (yIdx > y - pS)) {
     red[vecIdx] = 1.0;
+  } else if (colorTransfer == 0){
+    float t, l, c, r, b;
+    float speed = 0.25;
+    t = tex2D(texRed, x, y - pointSize / 2);
+    l = tex2D(texRed, x - pointSize / 2, y);
+    c = tex2D(texRed, x, y) ;
+    r = tex2D(texRed, x + pointSize / 2, y);
+    b = tex2D(texRed, x, y + pointSize / 2);
+    red[vecIdx] = c + speed * (t + b + r + l - 4 * c);
   } else {
-    red[vecIdx] *= .98;
+    red[vecIdx] *= 0.99;
   }
 }
 
 /******************************************************************************/
-__global__ void updateGreens(float* green, int xIdx, int yIdx, float z){
+__global__ void updateGreens(float* green, int xIdx, int yIdx, float z, int colorTransfer){
   int pS = (int)(5 + (z * gScalar));
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
+  int pointSize = round(z*0.65);
   if ((xIdx < x + pS) && (xIdx > x - pS) && (yIdx < y + pS) && (yIdx > y - pS)) {
     green[vecIdx] = 1.0;
+  } else if (colorTransfer == 1){
+    float t, l, c, r, b;
+    float speed = 0.25;
+    t = tex2D(texGreen,x,y-pointSize/2);
+    l = tex2D(texGreen,x-pointSize/2,y);
+    c = tex2D(texGreen,x,y);
+    r = tex2D(texGreen,x+pointSize/2,y);
+    b = tex2D(texGreen,x,y+pointSize/2);
+    green[vecIdx] = c + speed * (t + b + r + l - 4 * c);
   } else {
-    green[vecIdx] *= .90;
+    green[vecIdx] *= .99;
   }
 }
 
 /******************************************************************************/
-__global__ void updateBlues(float* blue, int xIdx, int yIdx, float z){
+__global__ void updateBlues(float* blue, int xIdx, int yIdx, float z, int colorTransfer){
   int pS = (int)(5 + (z * gScalar));
-
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
+  int pointSize = round(z*0.65);
   if ((xIdx < x + pS) && (xIdx > x - pS) && (yIdx < y + pS) && (yIdx > y - pS)) {
     blue[vecIdx] = 1.0;
+  } else if (colorTransfer == 2){
+    float t, l, c, r, b;
+    float speed = 0.25;
+    t = tex2D(texBlue,x,y-pointSize/2);
+    l = tex2D(texBlue,x-pointSize/2,y);
+    c = tex2D(texBlue,x,y);
+    r = tex2D(texBlue,x+pointSize/2,y);
+    b = tex2D(texBlue,x,y+pointSize/2);
+    blue[vecIdx] = c + speed * (t + b + r + l - 4 * c);
+    // blue[vecIdx] = acc;
   } else {
-    float acc = 0.0;
-    for (int i = -5;i <= 5;i++) {
-      for (int j = -5;j <= 5;j++) {
-        acc += tex2D(texBlue, x + i, y + j);
-      }
-    }
-    acc /= 121.0;
-    blue[vecIdx] = acc;
+    blue[vecIdx] *= .99;
   }
 }
 

@@ -16,12 +16,6 @@
 #include "interface2.h"
 // --- TODO: create interface.h library, move these there, and crack to here
 // --- also, update crack function to not need the -w flag at compile time
-struct AParams {
-  bool  verbose;
-  int   runMode;
-  int   myParam1;
-  float myParam2;
-};
 int usage();
 int setDefaults(AParams *PARAMS);
 int viewParams(const AParams *PARAMS);
@@ -60,14 +54,14 @@ int main(int argc, char *argv[]){
         if (PARAMS.verbose) {
           printf("\n -- running Assignment 1 -- \n");
         }
-        mainRun();
+        mainRun(PARAMS.myParam1);
         break;
 
     case 2:
         if (PARAMS.verbose) {
           printf("\n -- running in runMode = 2 -- \n");
         }
-        drawGraph();
+        drawGraph(PARAMS);
         break;
     default: printf("no valid run mode selected\n");
 }

@@ -10,6 +10,9 @@
 #include "gpu_main.h"
 #include "animate.h"
 #include "interface2.h"
+#include <thread>
+#include "struct-point.h"
+
 // move these to interface.h library, and make class
 
 
@@ -21,6 +24,9 @@ int gHEIGHT = 1080;		// PALETTE HEIGHT
 // int main(int argc, char *argv[]){
 // 	return 0;
 // }
+double randNum() {
+  return double(std::rand()) / (double(RAND_MAX) + 1.0);
+}
 
 void printInformation() {
 		cudaDeviceProp prop;
@@ -38,16 +44,6 @@ void printInformation() {
 			std::cout << "Amount of available constant memory: " << prop.totalConstMem << std::endl;
 			std::cout << "Number of multiprocessors on the GPU card: " << prop.multiProcessorCount << std::endl;
 		}
-}
-
-void drawGraph() {
-	GPU_Palette P1;
-	P1 = openPalette(gWIDTH, gHEIGHT); // width, height of palette as args
-	CPUAnimBitmap animation(&P1);
-	cudaMalloc((void**) &animation.dev_bitmap, animation.image_size());
-	animation.initAnimation();
-	runIt(&P1, &animation);
-	freeGPUPalette(&P1);
 }
 
 /******************************************************************************/
@@ -79,67 +75,86 @@ GPU_Palette openPalette(int theWidth, int theHeight)
 	return P1;
 }
 
+void initPoints(APoint& point) {
+		point.start_x = randNum();
+		point.start_y = randNum();
+		point.start_z = randNum();
+		point.x = point.start_x * 20;
+	 	point.y = point.start_y * 20;
+		point.z = point.start_z * 20;
 
+		point.red = point.start_x;
+		point.green = point.start_y;
+		point.blue = point.start_z;
+
+		if((point.red >= point.green) && (point.red >= point.blue))
+		 	point.color_heatTransfer = 0;
+	 	else if (point.green >= point.blue)
+		 	point.color_heatTransfer = 1;
+	 	else
+		 	point.color_heatTransfer = 2;
+}
+
+
+int calculatePoint(APoint& point, APoint& change) {
+	const double t = 0.005;
+	change.x = t * (change.x * (point.y - point.x));
+	change.y = t * ((point.x * (change.x - point.z)) - point.y);
+  change.z = t * ( (point.x * point.y) - (change.z * point.z));
+
+  point.x += change.x;
+  point.y += change.y;
+  point.z += change.z;
+
+  static float minX = -20.0;
+  static float maxX = 20.0;
+  static float minY = -30.0;
+  static float maxY = 30.0;
+
+  static float xRange = fabs(maxX - minX);
+  static float xScalar = 0.9 * (gWIDTH/xRange);
+
+  static float yRange = fabs(maxY - minY);
+  static float yScalar = 0.9 * (gHEIGHT/yRange);
+
+  point.xIdx = round(xScalar * (point.x - minX));
+  point.yIdx = round(yScalar * (point.y - minY));
+	return 0;
+}
 /******************************************************************************/
 int runIt(GPU_Palette* P1, CPUAnimBitmap* A1){
 
-	APoint thePoint, theChange; //theMins, theMaxs;
-	float t = .005; // time step size
-	thePoint.x = thePoint.y = thePoint.z = 0.5;
-
-	float sigma = 10.0;
-	float rho = 28.0;
-	float beta = 2.666;
-
-	int xIdx;
-	int yIdx;
-
-	int xIdx2;
-	int yIdx2;
-
-	int xIdx3;
-	int yIdx3;
-
-	int xIdx4;
-	int yIdx4;
-
-	int xIdx5;
-	int yIdx5;
-	for (long i = 1; i< 100000; i++)
+	APoint points[5];
+	APoint changes[5];
+	for (int i = 0;i < 5;i++) {
+		initPoints(points[i]);
+	}
+	srand(time(NULL));
+	std::thread threads[5];
+	while(true)
 	{
+		for (int j = 0;j < 5;j++) {
+			threads[j] = std::thread(calculatePoint, std::ref(points[j]), std::ref(changes[j]));
+		}
 
-		theChange.x = t * (sigma * (thePoint.y - thePoint.x));
-		theChange.y = t * ( (thePoint.x * (rho - thePoint.z)) - thePoint.y);
-		theChange.z = t * ( (thePoint.x * thePoint.y) - (beta * thePoint.z) );
-
-		thePoint.x += theChange.x;
-		thePoint.y += theChange.y;
-		thePoint.z += theChange.z;
-
-		xIdx = floor((thePoint.x * 32) + 960); // (X * scalar) + (gWidth/2)
-		yIdx = floor((thePoint.y * 18) + 540); // (Y * scalar) + (gHeight/2)
-
-		xIdx2 = floor((thePoint.x * 16) + 500); // (X * scalar) + (gWidth/2)
-		yIdx2 = floor((thePoint.y * 9) + 200); // (Y * scalar) + (gHeight/2)
-
-		xIdx3 = floor((thePoint.x * 40) + 700); // (X * scalar) + (gWidth/2)
-		yIdx3 = floor((thePoint.y * 30) + 40); // (Y * scalar) + (gHeight/2)
-
-		xIdx4 = floor((thePoint.x * 20) + 460); // (X * scalar) + (gWidth/2)
-		yIdx4 = floor((thePoint.y * 10) + 740); // (Y * scalar) + (gHeight/2)
-
-		xIdx5 = floor((thePoint.x * 64) + 650); // (X * scalar) + (gWidth/2)
-		yIdx5 = floor((thePoint.y * 36) + 30); // (Y * scalar) + (gHeight/2)
-
-		updatePalette(P1, xIdx, yIdx, thePoint.z);
-		updatePalette(P1, xIdx2, yIdx2, thePoint.z);
-		updatePalette(P1, xIdx3, yIdx3, thePoint.z);
-		updatePalette(P1, xIdx4, yIdx4, thePoint.z);
-		updatePalette(P1, xIdx5, yIdx5, thePoint.z);
-    A1->drawPalette();
+		for (int j = 0;j < 5;j++) {
+			threads[j].join();
+		}
+		updatePalette(P1, points);
+		A1->drawPalette();
 	}
 
 return 0;
+}
+
+void drawGraph(const AParams& paramters) {
+	GPU_Palette P1;
+	P1 = openPalette(gWIDTH, gHEIGHT); // width, height of palette as args
+	CPUAnimBitmap animation(&P1);
+	cudaMalloc((void**) &animation.dev_bitmap, animation.image_size());
+	animation.initAnimation();
+	runIt(&P1, &animation);
+	freeGPUPalette(&P1);
 }
 
 /******************************************************************************/

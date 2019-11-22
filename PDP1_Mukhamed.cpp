@@ -1,6 +1,7 @@
 #include <stdio.h>
-#include <pthread.h>
-#include "PDP1_Mukhamed.h"
+#include <thread>
+
+using namespace std;
 
 // these should be a, b, c, defined 8,000 differnt combinations
 //double o = 7;
@@ -51,28 +52,33 @@ bool isAllOne(int vals[], int n) {
   return isAll;
 }
 
-int mainRun()
+int mainRun(int arg)
 {
   int gNumThreads = 8;
-  // int MULTITHREAD = 1; // set default
-  // if(argc == 2)
-  // {
-  //   MULTITHREAD = atof(argv[1]);
-  // }
-  gNumThreads = 8;
+  int MULTITHREAD = 0; // set default
+  if(arg != 0)
+  {
+    MULTITHREAD = arg;
+  }
+  if (MULTITHREAD != 0) {
+    gNumThreads = thread::hardware_concurrency();
+    printf("Amount of threads is %d\n", gNumThreads);
+  }
+  else {
+    gNumThreads = 8;
+  }
   time_t theStart, theEnd;
   time(&theStart);
 
-
   int vals[gNumThreads];
-  std::thread zThreads[gNumThreads];
+  thread zThreads[gNumThreads];
   // for a,b,c parameters (8,000)
   for(float a = 0.05;a < 1;a += 0.05) { // 20 x
     for(float b = 0.05;b < 1;b += 0.05) { // 20 x
       for(float c = 0.05;c < 1;c += 0.05) { // 20 = 8,000
           for(int tid=0; tid < gNumThreads; tid++)
           {
-            zThreads[tid] = std::thread(runIt, a, b, c, &vals[tid]);
+            zThreads[tid] = thread(runIt, a, b, c, &vals[tid]);
           }
           for(int tid=0; tid<gNumThreads; tid++)
           {
@@ -86,8 +92,9 @@ int mainRun()
       }
     }
   }
+  time(&theEnd);
   printf("MULTITHREADING seconds used: %ld\n", theEnd - theStart);
-
+  free(zThreads);
   return 0;
 }
 

@@ -1,9 +1,9 @@
 
 # CUDA includes and libraries
-F1= -L/usr/local/cuda/lib64
-# F1= -L/usr/local/cuda-10.1/lib64
-F2= -I/usr/local/cuda-9.2/targets/x86_64-linux/include -lcuda -lcudart
-# F2= -I/usr/local/cuda-10.1/targets/x86_64-linux/include -lcuda -lcudart
+# F1= -L/usr/local/cuda/lib64
+F1= -L/usr/local/cuda-10.1/lib64
+# F2= -I/usr/local/cuda-9.2/targets/x86_64-linux/include -lcuda -lcudart
+F2= -I/usr/local/cuda-10.1/targets/x86_64-linux/include -lcuda -lcudart
 
 # SDL shtuff (for sound processing)
 #F3= -I/usr/local/include -L/usr/local/lib -lSDL2
