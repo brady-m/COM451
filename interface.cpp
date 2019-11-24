@@ -1,118 +1,188 @@
-/*******************************************************************************
-*
-*   An example program for how to use use crack.h to collect params and args
-*   and file names and so on from the command line
-*
-*   compile with:> g++ -w interface.cpp
-*   run with something like e.g. : a.out -r2 -v -a12 -b5.555
-*
-*******************************************************************************/
+#include "interface.h"
+#include "animate.h"
+#include "gpu_main.h"
+
 #include <stdio.h>
-#include <cstdlib>  // includes atoi() and atof()
-#include <string.h> // used by crack.h
-#include "crack.h"
+#include <sys/sysinfo.h>
+#include <math.h>
+#include <thread>
+#include <iostream>
 
-// --- TODO: create interface.h library, move these there, and crack to here
-// --- also, update crack function to not need the -w flag at compile time
-struct AParams {
-  bool  verbose;
-  int   runMode;
-  int   myParam1;
-  float myParam2;
-};
-int usage();
-int setDefaults(AParams *PARAMS);
-int viewParams(const AParams *PARAMS);
-// ---
+double getRandNum() {
+  return double(std::rand()) / (double(RAND_MAX) + 1.0);
+}
 
-/******************************************************************************/
-int main(int argc, char *argv[]){
+/******************************RunMode 1*******************************************/
+int getThreadNum(const std::string mode)         // function to acquire number of cores on machine
+{
+  return mode.compare("multi") == 0 ? get_nprocs() : 1;  // based on the chosen mode(multi or nonmulti)
+}
 
-  unsigned char ch;
-  AParams PARAMS;
+void calculateEquation(const std::string mode, Parameters& Parameters)
+{
+  Point Point;
 
-  setDefaults(&PARAMS);
+  for (Parameters.a = 0.05; Parameters.a <= 1; Parameters.a+=0.05) {
+    for (Parameters.b = 0.05; Parameters.b <= 1; Parameters.b+=0.05) {
+      for (Parameters.c = 0.05; Parameters.c <= 1; Parameters.c+=0.05) {
 
-  // -- get parameters that differ from defaults from command line:
-  while((ch = crack(argc, argv, "r|v|a|b|", 0)) != 0) {
-  	switch(ch){
-      case 'r' : PARAMS.runMode = atoi(arg_option); break;
-      case 'v' : PARAMS.verbose = 1; break;
-      case 'a' : PARAMS.myParam1 = atoi(arg_option); break;
-      case 'b' : PARAMS.myParam2 = atof(arg_option); break;
-      default  : usage(); return(0);
+
+        for (int i = 0; i < TEST_NUM/getThreadNum(mode); ++i) {
+          Point.start_x = double(std::rand()) / (double(RAND_MAX) + 1.0);
+          Point.start_y = double(std::rand()) / (double(RAND_MAX) + 1.0);
+          Point.start_z = double(std::rand()) / (double(RAND_MAX) + 1.0);
+
+          Point.x = Point.start_x;
+          Point.y = Point.start_y;
+          Point.z = Point.start_z;
+
+          for (int j = 0; j < ITERATION_NUM; ++j) {
+             Point.delta_x = t * (Parameters.a * (Point.y - Point.x));
+             Point.delta_y = t * ((Point.x*(Parameters.c - Parameters.a)) - (Point.x * Point.z) + (Parameters.c * Point.y));
+             Point.delta_z = t * ((Point.x * Point.y) - (Parameters.b * Point.z));
+
+            Point.x += Point.delta_x;
+            Point.y += Point.delta_y;
+            Point.z += Point.delta_z;
+          }
+
+          double totalChange = (fabs(Point.delta_x) +
+                                fabs(Point.delta_y) +
+                                fabs(Point.delta_z));
+
+          if (totalChange >= 0.01 &&
+                Point.x <= 100 && Point.y <= 100 && Point.z <= 100) {
+
+            printf("\nPARAMETERS: sigma=%.2f, rho=%.2f, beta=%.2f\n",
+                    Parameters.a, Parameters.b, Parameters.c);
+          }  else {
+            printf("These parameters are invalid, searching for valid parameters\n");
+          }
+        }
+      }
+    }
+  }
+}
+
+int runMode1(Parameters& Parameters)
+{
+  std::string mode;
+  while (1) {
+
+    printf("Choose mode (multi/nonmulti)\n");
+    std::cin >> mode;
+
+    if (mode.compare("exit") == 0) break;
+
+    if (mode.compare("multi") == 0) {									// MULTI MODE
+
+      printf("Number of cores: %d\n", getThreadNum(mode));
+      std::thread threads[getThreadNum(mode)];
+
+      for (int tId = 0; tId < getThreadNum(mode)-1; ++tId) {
+        threads[tId] = std::thread(calculateEquation, mode, std::ref(Parameters));
+      }
+
+      calculateEquation(mode, Parameters);
+
+      for (int tId = 0; tId < getThreadNum(mode)-1; ++tId) {
+        threads[tId].join();
+        // threads[tId].detach();
+      }
+    }
+    else if (mode.compare("nonmulti") == 0) {                           // NONMULTI MODE
+      calculateEquation(mode, Parameters);
     }
   }
 
-  // if running in verbose mode, print parameters to screen
-  if (PARAMS.verbose) viewParams(&PARAMS);
-
-  // run the system depending on runMode
-  switch(PARAMS.runMode){
-      case 1:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 1 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction1(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction1 -- "
-          break;
-
-      case 2:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 2 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction2(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction2 -- "
-          break;
-
-      case 3:
-          // and so on...
-          break;
-
-      default: printf("no valid run mode selected\n");
-  }
-
-return 0;
-}
-
-
-/*******************************************************************************
-                       INTERFACE HELPER FUNCTIONS
-*******************************************************************************/
-int setDefaults(AParams *PARAMS){
-
-    PARAMS->verbose     = 0;
-    PARAMS->runMode     = 1;
-    PARAMS->myParam1    = 42;
-    PARAMS->myParam2    = 3.14;
-
-    return 0;
-}
-
-/******************************************************************************/
-int usage()
-{
-  printf("\nUSAGE:\n");
-  printf("-r[int] -v -a[int] -b[float] \n\n");
-  printf("e.g.> a.out -r1 -v -a25 -b35.2 \n");
-  printf("v  verbose mode\n");
-  printf("r  run mode (1:myFunction1, 2:MyFunction2)\n");
-  printf("a  myParam1 (int)\n");
-  printf("b  myParam1 (float)\n");
-  printf("\n");
-  return(0);
-}
-
-/******************************************************************************/
-int viewParams(const AParams *PARAMS){
-
-  printf("\n--- USING PARAMETERS: ---\n");
-  printf("run mode: %d\n", PARAMS->runMode);
-  printf("verbose: %d\n", PARAMS->verbose);
-  printf("myParam1: %d\n", PARAMS->myParam1);
-  printf("myParam2: %f\n", PARAMS->myParam2);
-  printf("\n");
   return 0;
 }
 
-/******************************************************************************/
+
+/******************************RunMode 2*******************************************/
+
+int initStartingPoints(Points& Points) {
+
+  for (Point& Point : Points.points) {
+    Point.start_x = getRandNum();
+    Point.start_y = getRandNum();
+    Point.start_z = getRandNum();
+
+    Point.x = Point.start_x*20;
+    Point.y = Point.start_y*20;
+    Point.z = Point.start_z*20;
+
+    Point.red = Point.start_x;
+    Point.green = Point.start_y;
+    Point.blue = Point.start_z;
+
+    if((Point.red >= Point.green) && (Point.red >= Point.blue))
+      Point.color_heatTransfer = 0;
+    else if (Point.green >= Point.blue)
+      Point.color_heatTransfer = 1;
+    else
+      Point.color_heatTransfer = 2;
+  }
+
+  return 0;
+}
+
+int drawEquation(const Parameters& Parameters, Point& Point) {
+
+  Point.delta_x = t * (Parameters.a * (Point.y - Point.x));
+  Point.delta_y = t * ((Point.x*(Parameters.c - Parameters.a)) - (Point.x * Point.z) + (Parameters.c * Point.y));
+  Point.delta_z = t * ((Point.x * Point.y) - (Parameters.b * Point.z));
+
+  Point.x += Point.delta_x;
+  Point.y += Point.delta_y;
+  Point.z += Point.delta_z;
+
+  static float minX = -25.0;
+  static float maxX = 30.0;
+  static float minY = -25.0;
+  static float maxY = 30.0;
+
+  static float xRange = fabs(maxX - minX);
+  static float xScalar = 0.9 * (gWIDTH/xRange);
+
+  static float yRange = fabs(maxY - minY);
+  static float yScalar = 0.9 * (gHEIGHT/yRange);
+
+  Point.xIdx = round(xScalar * (Point.x - minX));
+  Point.yIdx = round(yScalar * (Point.y - minY));
+
+  // Point.xIdx = floor((Point.x * 32) + 960); // (X * scalar) + (gWidth/2)
+  // Point.yIdx = floor((Point.y * 18) + 540); // (Y * scalar) + (gHeight/2)
+
+  return 0;
+}
+
+int runMode2(const Parameters& Parameters, Points& Points)
+{
+  GPU_Palette P1;
+  P1 = openPalette(gWIDTH, gHEIGHT); // width, height of palette as args
+
+  CPUAnimBitmap animation(&P1);
+  cudaMalloc((void**) &animation.dev_bitmap, animation.image_size());
+  animation.initAnimation();
+
+  srand((unsigned)time(NULL));
+  initStartingPoints(Points);
+
+  std::thread threads[NUMBER_OF_POINTS];
+  while (true) {
+
+    for (int tId = 0; tId < NUMBER_OF_POINTS; ++tId) {
+      threads[tId] = std::thread(drawEquation, std::ref(Parameters), std::ref(Points.points[tId]));
+    }
+    for (int tId = 0; tId < NUMBER_OF_POINTS; ++tId) {
+      threads[tId].join();
+    }
+    updatePalette(&P1, Points);
+    (&animation)->drawPalette();
+  }
+
+  freeGPUPalette(&P1);
+
+  return 0;
+}
