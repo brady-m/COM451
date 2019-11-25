@@ -11,23 +11,28 @@
 #include <cstdlib>  // includes atoi() and atof()
 #include <string.h> // used by crack.h
 #include "crack.h"
+#include <thread>
+#include "gpu_main.h"
+#include "interface.h"
+#include "PDP1_Erkinbek.h"
+#include "PDP2_Erkinbek.h"
 
-// --- TODO: create interface.h library, move these there, and crack to here
+
+using namespace std;
+
+int visualizeAss1();
+
 // --- also, update crack function to not need the -w flag at compile time
-struct AParams {
-  bool  verbose;
-  int   runMode;
-  int   myParam1;
-  float myParam2;
-};
-int usage();
-int setDefaults(AParams *PARAMS);
-int viewParams(const AParams *PARAMS);
-// ---
+
 
 /******************************************************************************/
+
 int main(int argc, char *argv[]){
 
+  unsigned concurentThreadsSupported = std::thread::hardware_concurrency();
+  int gNumThreads = concurentThreadsSupported;
+
+  
   unsigned char ch;
   AParams PARAMS;
 
@@ -49,32 +54,52 @@ int main(int argc, char *argv[]){
 
   // run the system depending on runMode
   switch(PARAMS.runMode){
+      case 0:
+          if (PARAMS.verbose) printf("\n -- running in runMode = 0 -- \n");
+          printf("\n -- MAIN INFO -- \n");
+
+          printf("The number of cores : %d\n", gNumThreads);
+
+          int nDevices;
+
+          cudaGetDeviceCount(&nDevices);
+
+          //printf("%d \n", nDevices);
+
+          cudaDeviceProp prop;
+          cudaGetDeviceProperties(&prop, 0);
+          printf("Device name: %s\n", prop.name);
+          printf("Total global memory: %Iu\n", prop.totalGlobalMem);
+          printf("Maximum amount of shared memory per block: %Iu\n", prop.sharedMemPerBlock);
+          printf("Maximum amount of threads per block: %i\n", prop.maxThreadsPerBlock);
+          printf("Maximum number of block per dimension of the grid: %i\n", prop.maxGridSize);
+          printf("Amount of available constant memory: %Iu\n", prop.totalConstMem);
+          printf("Number of multiprocessros on the GPU card: %i\n", prop.multiProcessorCount);
+          printf("Number of CPU cores on the machine: %i\n", thread::hardware_concurrency());
+
+          break;
+
       case 1:
           if (PARAMS.verbose) printf("\n -- running in runMode = 1 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction1(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction1 -- "
+          printf("\n RUN ASSIGNMENT 1 \n");
+
+          runAss1(PARAMS.myParam1);
+
           break;
 
       case 2:
           if (PARAMS.verbose) printf("\n -- running in runMode = 2 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction2(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction2 -- "
-          break;
+          printf("\n ANIMATE ATTRACTOR \n");
 
-      case 3:
-          // and so on...
-          break;
+          animateAttractor();
+
+          break;        
 
       default: printf("no valid run mode selected\n");
   }
 
 return 0;
 }
-
 
 /*******************************************************************************
                        INTERFACE HELPER FUNCTIONS
