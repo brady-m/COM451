@@ -1,31 +1,32 @@
-/*******************************************************************************
-*
-*   An example program for how to use use crack.h to collect params and args
-*   and file names and so on from the command line
-*
-*   compile with:> g++ -w interface.cpp
-*   run with something like e.g. : a.out -r2 -v -a12 -b5.555
-*
-*******************************************************************************/
 #include <stdio.h>
-#include <cstdlib>  // includes atoi() and atof()
-#include <string.h> // used by crack.h
+#include <cstdlib> 
+#include <string.h> 
 #include "crack.h"
+#include "interface.h"
+#include <cuda_runtime_api.h>
+#include <cuda.h>
+#include "attractor.h"
+#include "visualizeAttractor.h"
 
-// --- TODO: create interface.h library, move these there, and crack to here
-// --- also, update crack function to not need the -w flag at compile time
-struct AParams {
-  bool  verbose;
-  int   runMode;
-  int   myParam1;
-  float myParam2;
-};
-int usage();
-int setDefaults(AParams *PARAMS);
-int viewParams(const AParams *PARAMS);
-// ---
+void ShowDeviceInformation() {
+   cudaDeviceProp  prop;
+   int numberOfDevices;    
+   unsigned numberOfCores = std::thread::hardware_concurrency();
+   printf( "Number of cores: %d\n", numberOfCores);
+   cudaGetDeviceCount(&numberOfDevices);
+   for (int i = 0; i < numberOfDevices; i++) {
+      cudaGetDeviceProperties( &prop, i );
+      printf( "Name: %s\n", prop.name );
+      printf( "Max amount of shared memory per block: %ld\n", prop.sharedMemPerBlock );              
+      printf( "Max number of threads per block: %d\n", prop.maxThreadsPerBlock );
+      printf( "Max number of blocks per dimension of the grid: %d\n", prop.maxGridSize );       
+      printf( "Total constant memory: %ld\n", prop.totalConstMem );
+      printf( "Mumber of multiprocessors on the GPU card: %d\n", prop.multiProcessorCount );
+  }
+}
 
-/******************************************************************************/
+
+
 int main(int argc, char *argv[]){
 
   unsigned char ch;
@@ -46,40 +47,41 @@ int main(int argc, char *argv[]){
 
   // if running in verbose mode, print parameters to screen
   if (PARAMS.verbose) viewParams(&PARAMS);
-
+  printf("\nUSAGE:\n");
+  printf("-r[int] -v -a[int] -b[float] \n\n");
+  printf("e.g.> a.out -r1 -v -a25 -b35.2 \n");
+  printf("v  verbose mode\n");
+  printf("r  run mode (1:myFunction1, 2:MyFunction2)\n");
+  printf("a  myParam1 (int)\n");
+  printf("b  myParam1 (float)\n");
+  printf("\n");
+  printf("To run the first assignment in non-Multhireading mode\n");
+  printf("You should specify -a0 parameter. e.g:\n");
+  printf("./PDP2_LikhovodKirill -r1 -a0\n");
+  printf("\n");
   // run the system depending on runMode
   switch(PARAMS.runMode){
+      case 0:
+          if (PARAMS.verbose) printf("\n RunMode = 0. Information about PC. \n");
+          ShowDeviceInformation();
+          break;
       case 1:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 1 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction1(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction1 -- "
+          if (PARAMS.verbose) printf("\n -- RunMode = 1. Calculate attractor -- \n");
+          // Param1 here defines runinng in multhread mode or not 
+          RunAssignment1(PARAMS.myParam1);
           break;
-
       case 2:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 2 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction2(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction2 -- "
-          break;
-
-      case 3:
-          // and so on...
+          if (PARAMS.verbose) printf("\n -- RunMode = 2. Visualize attractor -- \n");
+          visualizeAttractor();
           break;
 
       default: printf("no valid run mode selected\n");
   }
 
-return 0;
+  return 0;
 }
 
-
-/*******************************************************************************
-                       INTERFACE HELPER FUNCTIONS
-*******************************************************************************/
-int setDefaults(AParams *PARAMS){
+int setDefaults(AParams *PARAMS) {
 
     PARAMS->verbose     = 0;
     PARAMS->runMode     = 1;
@@ -89,9 +91,7 @@ int setDefaults(AParams *PARAMS){
     return 0;
 }
 
-/******************************************************************************/
-int usage()
-{
+int usage() {
   printf("\nUSAGE:\n");
   printf("-r[int] -v -a[int] -b[float] \n\n");
   printf("e.g.> a.out -r1 -v -a25 -b35.2 \n");
@@ -103,8 +103,7 @@ int usage()
   return(0);
 }
 
-/******************************************************************************/
-int viewParams(const AParams *PARAMS){
+int viewParams(const AParams *PARAMS) {
 
   printf("\n--- USING PARAMETERS: ---\n");
   printf("run mode: %d\n", PARAMS->runMode);
@@ -114,5 +113,3 @@ int viewParams(const AParams *PARAMS){
   printf("\n");
   return 0;
 }
-
-/******************************************************************************/
