@@ -90,11 +90,11 @@ __global__ void updateReds(float* red, int xIdx, int yIdx, float z){
 
   if((powf((x + 5 - xIdx), 2) + powf((y + 5 - yIdx), 2)) < powf(pointSize, 2))
   {
-    red[vecIdx] = 1;
+    red[vecIdx] = 1.0;
   }
   else
   {
-    red[vecIdx] *= 0.99;
+    red[vecIdx] *= 0.9;
   }
 }
 
