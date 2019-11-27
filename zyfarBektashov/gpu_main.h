@@ -35,9 +35,9 @@ void freeGPUPalette(GPU_Palette*);
 
 // kernel calls:
 //__global__ void updateGrays(float* gray);
-__global__ void updateReds(float* red, int, int);
-__global__ void updateGreens(float* green, int, int);
-__global__ void updateBlues(float* blue, int, int);
+__global__ void updateReds(float* red, int, int, float);
+__global__ void updateGreens(float* green, int, int, float);
+__global__ void updateBlues(float* blue, int, int, float);
 //__global__ void setup_rands(curandState* state, unsigned long seed, unsigned long);
 
 

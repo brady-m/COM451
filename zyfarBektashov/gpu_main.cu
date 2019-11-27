@@ -86,7 +86,8 @@ __global__ void updateReds(float* red, int xIdx, int yIdx, float z){
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
 
-  int pointSize = round(z*0.65);
+  int pointSize = round(z * 0.5);
+
   if((powf((x + 5 - xIdx), 2) + powf((y + 5 - yIdx), 2)) < powf(pointSize, 2))
   {
     red[vecIdx] = 1;
@@ -104,7 +105,8 @@ __global__ void updateGreens(float* green, int xIdx, int yIdx, float z){
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
 
-  int pS = round(z*0.65);
+  int pS = round(z * 0.5);
+
   if ((powf((x + 5 - xIdx), 2) + powf((y + 5 - yIdx), 2)) < powf(pS, 2))
   {
     green[vecIdx] = 1.0;
@@ -122,7 +124,8 @@ __global__ void updateBlues(float* blue, int xIdx, int yIdx, float z){
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
 
-  int pS = round(z*0.65);
+  int pS = round(z * 0.5);
+
   if ((powf((x + 5 - xIdx), 2) + powf((y + 5 - yIdx), 2)) < powf(pS, 2))
   {
     blue[vecIdx] = 1.0;
