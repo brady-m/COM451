@@ -10,22 +10,14 @@
 
 // #include <cuda_runtime.h>
 
-// #define BackgroundRed 0.141f
-// #define BackgroundGreen 0.212f
-// #define BackgroundBlue 0.396f
-
 #define BackgroundRed 0.0f
 #define BackgroundGreen 0.0f
 #define BackgroundBlue 0.0f
 
-// #define AttractorRed 0.545f
-// #define AttractorGreen 0.847f
-// #define AttractorBlue 0.741f
 
 #define AttractorRed 0.709f
-// #define AttractorGreen 0.439f
-// #define AttractorBlue 0.439f
-#define AttractorGreen 0.0f
+
+#define AttractorGreen 0.500f
 #define AttractorBlue 0.0
 
 #define zInitialSize 3

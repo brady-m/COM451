@@ -25,7 +25,7 @@
 #define AttractorBlue 0.741
 
 #define NUMBER_OF_ATTRACTORS 5
-static float t = .005; // time step size
+static float t = .02; // time step size
 
 
 int gWIDTH = 1920; // PALETTE WIDTH
@@ -78,28 +78,55 @@ double getRandNum() {
     return double(std::rand()) / (double(RAND_MAX) + 1.0);
 }
 
-int blah(APoint& thePoint, APoint& theChange) {
+int animate(APoint& thePoint, APoint& theChange) {
+    // Rossler Attractor
+	static float a = 0.2;
+	static float b = 0.2;
+	static float c = 5.7;
 
-
-	// set these in class, same as below
-	static float a = 10.0;
-	static float b = 28.0;
-	static float c = 2.666;
-
-	theChange.x = t * (a * (thePoint.y - thePoint.x));
-	theChange.y = t * ( (thePoint.x * (b - thePoint.z)) - thePoint.y);
-	theChange.z = t * ( (thePoint.x * thePoint.y) - (c * thePoint.z) );
+	theChange.x = t * (-thePoint.y - thePoint.z);
+	theChange.y = t * (thePoint.x + (a * thePoint.y));
+	theChange.z = t * (b + (thePoint.x * thePoint.z) - (c * thePoint.z));
 
     thePoint.x += theChange.x;
     thePoint.y += theChange.y;
     thePoint.z += theChange.z;
 
-	// only need to compute this stuff once - maybe put in initializer
-	// or when switching between attractors
-	static float minX = -20;
-	static float maxX = 20;
-	static float minY = -30;
-	static float maxY = 30;
+	// set these as class
+	static float minX = -10.0;
+	static float maxX = 12.0;
+	static float minY = -11.0;
+	static float maxY = 8.0;
+
+	// // set these in class, same as below
+	// static float a = 10.0;
+	// static float b = 28.0;
+	// static float c = 2.666;
+	
+	// float q = -50;
+	// float beta = 0.3;
+	// float p = 1;
+
+
+	// theChange.x = t * ((thePoint.z * thePoint.y) / q);
+	// theChange.y = t * ( thePoint.y - thePoint.x + p);
+	// theChange.z = t * ( beta + thePoint.y );
+
+
+	// //theChange.x = t * (a * (thePoint.y - thePoint.x));
+	// //theChange.y = t * ( (thePoint.x * (b - thePoint.z)) - thePoint.y);
+	// //theChange.z = t * ( (thePoint.x * thePoint.y) - (c * thePoint.z) );
+
+    // thePoint.x += theChange.x;
+    // thePoint.y += theChange.y;
+    // thePoint.z += theChange.z;
+
+	// // only need to compute this stuff once - maybe put in initializer
+	// // or when switching between attractors
+	// static float minX = -20;
+	// static float maxX = 20;
+	// static float minY = -30;
+	// static float maxY = 30;
 
     static float xRange = fabs(maxX - minX);
     static float xScalar = 0.9 * (gWIDTH/xRange);
@@ -150,7 +177,7 @@ int runIt(GPU_Palette* P1, CPUAnimBitmap* A1)
     for (long i = 1; i < 100000; i++) {
 
         for (int i = 0; i < NUMBER_OF_ATTRACTORS; i++) {
-            threads[i] = std::thread(blah, std::ref(points[i]), std::ref(changes[i]));
+            threads[i] = std::thread(animate, std::ref(points[i]), std::ref(changes[i]));
         }
 
         for (int t_id = 0; t_id < NUMBER_OF_ATTRACTORS; t_id++) {
