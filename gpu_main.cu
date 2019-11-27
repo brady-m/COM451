@@ -10,7 +10,7 @@
 
 #include <cuda_runtime.h>
 
-#define gScalar 0.2
+#define gScalar 0.3
 texture<float, 2, cudaReadModeElementType> texBlue;
 
 /******************************************************************************/
