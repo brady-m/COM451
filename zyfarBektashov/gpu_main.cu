@@ -69,18 +69,18 @@ void freeGPUPalette(GPU_Palette* P)
 
 
 /******************************************************************************/
-int updatePalette(GPU_Palette* P, int xIdx, int yIdx)
+int updatePalette(GPU_Palette* P, int xIdx, int yIdx, float z)
 {
 
-  updateReds <<< P->gBlocks, P->gThreads >>> (P->red, xIdx, yIdx);
-  updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, xIdx, yIdx);
-	updateBlues <<< P->gBlocks, P->gThreads >>> (P->blue, xIdx, yIdx);
+  updateReds <<< P->gBlocks, P->gThreads >>> (P->red, xIdx, yIdx, z);
+  updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, xIdx, yIdx, z);
+	updateBlues <<< P->gBlocks, P->gThreads >>> (P->blue, xIdx, yIdx, z);
 
   return 0;
 }
 
 /******************************************************************************/
-__global__ void updateReds(float* red, int xIdx, int yIdx){
+__global__ void updateReds(float* red, int xIdx, int yIdx, float z){
 
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
@@ -98,7 +98,7 @@ __global__ void updateReds(float* red, int xIdx, int yIdx){
 }
 
 /******************************************************************************/
-__global__ void updateGreens(float* green, int xIdx, int yIdx){
+__global__ void updateGreens(float* green, int xIdx, int yIdx, float z){
 
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
@@ -116,7 +116,7 @@ __global__ void updateGreens(float* green, int xIdx, int yIdx){
 }
 
 /******************************************************************************/
-__global__ void updateBlues(float* blue, int xIdx, int yIdx){
+__global__ void updateBlues(float* blue, int xIdx, int yIdx, float z){
 
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);

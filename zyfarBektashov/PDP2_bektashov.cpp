@@ -92,14 +92,12 @@ void printComputerInformation()
   for (int i=0; i < numOfDevices; i++)
   {
     cudaGetDeviceProperties(&prop, i);
-  	printf("GPU card #%d: %s\n", i, prop.name);
+  	printf("Name of GPU card %d: %s\n", i, prop.name);
   	printf("Total Global Memory of the GPU card: %ld bytes\n", prop.totalGlobalMem);
-  	printf("Max amount of shared memory per block:%ld bytes\n", prop.sharedMemPerBlock);
-  	printf("Max number of threads per block: %d\n", prop.maxThreadsPerBlock);
-  	printf("Maximum number of blocks 1st dimension of the grid: %d\n", prop.maxThreadsDim[0]);
-  	printf("Maximum number of blocks 2nd dimension of the grid: %d\n", prop.maxThreadsDim[1]);
-  	printf("Maximum number of blocks 3rd dimension of the grid: %d\n", prop.maxThreadsDim[2]);
-  	printf("Total constant memory: %ld\n", prop.totalConstMem);
+  	printf("Maximum amount of shared memory perblock: %ld bytes\n", prop.sharedMemPerBlock);
+  	printf("Maximum number of threads per block: %d\n", prop.maxThreadsPerBlock);
+  	printf("Maximum number of blocks per dimension of the grid: %d\n", prop.maxThreadsDim[0]);
+  	printf("Amount of available constant memory: %ld\n", prop.totalConstMem);
   	printf("Number of multiprocessors on the GPU card: %d\n", prop.multiProcessorCount);
   }
 }

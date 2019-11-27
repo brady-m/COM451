@@ -30,7 +30,7 @@ struct GPU_Palette{
 //GPU_Palette initGPUPalette(unsigned int, unsigned int);
 GPU_Palette openPalette(int, int);
 GPU_Palette initGPUPalette(unsigned int, unsigned int);
-int updatePalette(GPU_Palette*, int, int);
+int updatePalette(GPU_Palette*, int, int, float);
 void freeGPUPalette(GPU_Palette*);
 
 // kernel calls:

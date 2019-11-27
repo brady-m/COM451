@@ -95,23 +95,23 @@ int runIt(GPU_Palette* P1, CPUAnimBitmap* A1){
 		xIdx1 = floor((thePoint.x * 32) + 960); // (X * scalar) + (gWidth/2)
 		yIdx1 = floor((thePoint.y * 18) + 540); // (Y * scalar) + (gHeight/2)
 
-		xIdx2 = floor((thePoint.x * 32) + 360);
+		xIdx2 = floor((thePoint.x * 12) + 360);
 		yIdx2 = floor((thePoint.y * 18) + 140);
 
-		xIdx3 = floor((thePoint.x * 32) + 540);
+		xIdx3 = floor((thePoint.x * 42) + 540);
 		yIdx3 = floor((thePoint.y * 18) + 230);
 
-		xIdx4 = floor((thePoint.x * 32) + 630);
+		xIdx4 = floor((thePoint.x * 52) + 630);
 		yIdx4 = floor((thePoint.y * 18) + 410);
 
-		xIdx5 = floor((thePoint.x * 32) + 320);
+		xIdx5 = floor((thePoint.x * 22) + 320);
 		yIdx5 = floor((thePoint.y * 18) + 760);
 
-		updatePalette(P1, xIdx1, yIdx1);
-		updatePalette(P1, xIdx2, yIdx2);
-		updatePalette(P1, xIdx3, yIdx3);
-		updatePalette(P1, xIdx4, yIdx4);
-		updatePalette(P1, xIdx5, yIdx5);
+		updatePalette(P1, xIdx1, yIdx1, theChange.z);
+		updatePalette(P1, xIdx2, yIdx2, theChange.z);
+		updatePalette(P1, xIdx3, yIdx3, theChange.z);
+		updatePalette(P1, xIdx4, yIdx4, theChange.z);
+		updatePalette(P1, xIdx5, yIdx5, theChange.z);
 
 
     A1->drawPalette();
