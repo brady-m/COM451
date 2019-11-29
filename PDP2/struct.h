@@ -9,7 +9,7 @@
 #define cD2H            cudaMemcpyDeviceToHost
 
 #define ITERATION_NUM     10000000              // iteration number
-#define TEST_NUM          8                          // number for random starting points
+#define TEST_NUM          12                          // number for random starting points
 #define NUMBER_OF_POINTS  5
 #define gWIDTH            1920
 #define gHEIGHT           1080
