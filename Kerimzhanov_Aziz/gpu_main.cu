@@ -94,8 +94,8 @@ __global__ void updateReds(float* red, int xIdx, int yIdx, float z, int colorTra
   int vecIdx = x + (y * blockDim.x * gridDim.x);
 
   int pointSize = round(z*0.65);
-  if ((xIdx < x + pS) && (xIdx > x - pS) && (yIdx < y + pS) && (yIdx > y - pS)) {
-    red[vecIdx] = 0.5;
+  if ((powf((x - xIdx+5), 2) + powf((y - yIdx+5), 2)) < powf(pointSize, 2)) {
+    red[vecIdx] = 0.6;
   } else if (colorTransfer == 0){
     float t, l, c, r, b;
     float speed = 0.25;
@@ -106,7 +106,7 @@ __global__ void updateReds(float* red, int xIdx, int yIdx, float z, int colorTra
     b = tex2D(texRed, x, y + pointSize / 2);
     red[vecIdx] = c + speed * (t + b + r + l - 4 * c);
   } else {
-    red[vecIdx] *= 0.99;
+    red[vecIdx] *= .99;
   }
 }
 
@@ -117,8 +117,8 @@ __global__ void updateGreens(float* green, int xIdx, int yIdx, float z, int colo
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
   int pointSize = round(z*0.65);
-  if ((xIdx < x + pS) && (xIdx > x - pS) && (yIdx < y + pS) && (yIdx > y - pS)) {
-    green[vecIdx] = 0.8;
+  if ((powf((x - xIdx+5), 2) + powf((y - yIdx+5), 2)) < powf(pointSize, 2)) {
+    green[vecIdx] = 0.7;
   } else if (colorTransfer == 1){
     float t, l, c, r, b;
     float speed = 0.25;
@@ -140,8 +140,8 @@ __global__ void updateBlues(float* blue, int xIdx, int yIdx, float z, int colorT
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
   int vecIdx = x + (y * blockDim.x * gridDim.x);
   int pointSize = round(z*0.65);
-  if ((xIdx < x + pS) && (xIdx > x - pS) && (yIdx < y + pS) && (yIdx > y - pS)) {
-    blue[vecIdx] = 0.1;
+  if ((powf((x - xIdx+5), 2) + powf((y - yIdx+5), 2)) < powf(pointSize, 2)) {
+    blue[vecIdx] = 0.9;
   } else if (colorTransfer == 2){
     float t, l, c, r, b;
     float speed = 0.25;
