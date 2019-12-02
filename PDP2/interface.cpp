@@ -107,9 +107,9 @@ int initStartingPoints(Points& Points) {
     Point.start_y = getRandNum();
     Point.start_z = getRandNum();
 
-    Point.x = Point.start_x*20;
-    Point.y = Point.start_y*20;
-    Point.z = Point.start_z*20;
+    Point.x = Point.start_x*10;
+    Point.y = Point.start_y*10;
+    Point.z = Point.start_z*10;
 
     Point.red = Point.start_x;
     Point.green = Point.start_y;
