@@ -32,7 +32,6 @@ int main(int argc, char *argv[]){
       case 'a' : Parameters.a = atof(arg_option); break;
       case 'b' : Parameters.b = atof(arg_option); break;
       case 'c' : Parameters.c = atof(arg_option); break;
-      // case 'd' : Parameters.d = atof(arg_option); break;
       default  : usage(); return(0);
     }
   }
