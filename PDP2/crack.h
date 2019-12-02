@@ -45,11 +45,10 @@ char crack(int argc, char** argv, char* flags, int ignore_unknowns)
 int setDefaultParams(Parameters& Parameters)
 {
   Parameters.verbose     = 0;
-  Parameters.runMode     = 1;
+  Parameters.runMode     = 2;
   Parameters.a           = 10.0;
   Parameters.b           = 28.0;
   Parameters.c           = 2.666;
-  // Parameters.d           = 6;
 
   return 0;
 }
@@ -64,7 +63,6 @@ int usage()
   printf("a  (double)\n");
   printf("b  (double)\n");
   printf("c  (double)\n");
-  // printf("d  (double)\n");
   printf("\n");
   return(0);
 }
@@ -77,7 +75,6 @@ int viewParameters(const Parameters& Parameters)
   printf("a: %f\n", Parameters.a);
   printf("b: %f\n", Parameters.b);
   printf("c: %f\n", Parameters.c);
-  // printf("d: %f\n", Parameters.d);
   printf("\n");
   return 0;
 }
