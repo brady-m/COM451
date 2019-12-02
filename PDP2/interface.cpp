@@ -141,17 +141,17 @@ int drawEquation(const Parameters& Parameters, Point& Point) {
   static float minY = -30.0;
   static float maxY = 30.0;
 
-  static float xRange = fabs(maxX - minX);
-  static float xScalar = 0.9 * (gWIDTH/xRange);
+//   static float xRange = fabs(maxX - minX);
+//   static float xScalar = 0.9 * (gWIDTH/xRange);
 
-  static float yRange = fabs(maxY - minY);
-  static float yScalar = 0.9 * (gHEIGHT/yRange);
+//   static float yRange = fabs(maxY - minY);
+//   static float yScalar = 0.9 * (gHEIGHT/yRange);
 
-  Point.xIdx = round(xScalar * (Point.x - minX));
-  Point.yIdx = round(yScalar * (Point.y - minY));
+//   Point.xIdx = round(xScalar * (Point.x - minX));
+//   Point.yIdx = round(yScalar * (Point.y - minY));
 
-  // Point.xIdx = floor((Point.x * 32) + 960); // (X * scalar) + (gWidth/2)
-  // Point.yIdx = floor((Point.y * 18) + 540); // (Y * scalar) + (gHeight/2)
+  Point.xIdx = floor((Point.x * 32) + 960); // (X * scalar) + (gWidth/2)
+  Point.yIdx = floor((Point.y * 18) + 540); // (Y * scalar) + (gHeight/2)
   
   return 0;
 }
