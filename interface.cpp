@@ -11,20 +11,9 @@
 #include <cstdlib>  // includes atoi() and atof()
 #include <string.h> // used by crack.h
 #include "crack.h"
-
-// --- TODO: create interface.h library, move these there, and crack to here
-// --- also, update crack function to not need the -w flag at compile time
-struct AParams {
-  bool  verbose;
-  int   runMode;
-  int   myParam1;
-  float myParam2;
-};
-int usage();
-int setDefaults(AParams *PARAMS);
-int viewParams(const AParams *PARAMS);
-// ---
-
+#include "interface.h"
+#include "PDP2_Khydyr_u.h"
+#include "draw.h"
 /******************************************************************************/
 int main(int argc, char *argv[]){
 
@@ -49,24 +38,21 @@ int main(int argc, char *argv[]){
 
   // run the system depending on runMode
   switch(PARAMS.runMode){
+      case 0:
+          if (PARAMS.verbose) printf("\n -- running in runMode = 0 -- \n");
+           hardwareInfo();
+          break;
+
       case 1:
           if (PARAMS.verbose) printf("\n -- running in runMode = 1 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction1(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction1 -- "
+           attractor();
           break;
 
       case 2:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 2 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction2(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction2 -- "
-          break;
 
-      case 3:
-          // and so on...
+        if (PARAMS.verbose) printf("\n -- running in runMode = 2 -- \n");
+            Animdraw();
+      break;
           break;
 
       default: printf("no valid run mode selected\n");
@@ -116,3 +102,21 @@ int viewParams(const AParams *PARAMS){
 }
 
 /******************************************************************************/
+void hardwareInfo()
+{
+  cudaDeviceProp prop;
+  	 int numOfDevices;
+  	 cudaGetDeviceCount(&numOfDevices);
+  	 for (int i=0; i < numOfDevices; i++){
+  			cudaGetDeviceProperties(&prop, i);
+  			printf("GPU card #%d: %s\n", i, prop.name);
+  			printf("Total Global Memory of the GPU card: %ld bytes\n", prop.totalGlobalMem);
+  			printf("Max amount of shared memory per block:%ld bytes\n", prop.sharedMemPerBlock);
+  			printf("Max number of threads per block: %d\n", prop.maxThreadsPerBlock);
+  			printf("Maximum number of blocks 1st dimension of the grid: %d\n", prop.maxThreadsDim[0]);
+  			printf("Maximum number of blocks 2nd dimension of the grid: %d\n", prop.maxThreadsDim[1]);
+  			printf("Maximum number of blocks 3rd dimension of the grid: %d\n", prop.maxThreadsDim[2]);
+  			printf("Total constant memory: %ld\n", prop.totalConstMem);
+  			printf("Number of multiprocessors on the GPU card: %d\n", prop.multiProcessorCount);
+  	}
+}
