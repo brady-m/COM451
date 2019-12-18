@@ -5,6 +5,8 @@
 //#include <curand.h>                 // includes random num stuff
 #include <curand_kernel.h>          // has floor()
 //#include <cuda_texture_types.h>
+#include "draw.h"
+
 
 #define cH2D            cudaMemcpyHostToDevice
 #define cD2D            cudaMemcpyDeviceToDevice
@@ -30,14 +32,14 @@ struct GPU_Palette{
 //GPU_Palette initGPUPalette(unsigned int, unsigned int);
 GPU_Palette openPalette(int, int);
 GPU_Palette initGPUPalette(unsigned int, unsigned int);
-int updatePalette(GPU_Palette*, int, int, float);
+int updatePalette(GPU_Palette*, APoint (&points)[5]);
 void freeGPUPalette(GPU_Palette*);
 
 // kernel calls:
 //__global__ void updateGrays(float* gray);
-__global__ void updateReds(float* red, int, int, float);
-__global__ void updateGreens(float* green, int, int, float);
-__global__ void updateBlues(float* blue, int, int,float );
+__global__ void updateReds(float* red, int, int, float, double);
+__global__ void updateGreens(float* green, int, int, float, double);
+__global__ void updateBlues(float* blue, int, int,float, double );
 //__global__ void setup_rands(curandState* state, unsigned long seed, unsigned long);
 
 
