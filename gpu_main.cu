@@ -9,6 +9,8 @@
 #include "gpu_main.h"
 #include <cuda_runtime.h>
 #include <math.h> 
+#include "draw.h"
+
 
 #define gScalar 0.2
 
@@ -73,18 +75,18 @@ void freeGPUPalette(GPU_Palette* P)
 
 
 /******************************************************************************/
-int updatePalette(GPU_Palette* P, int xIdx, int yIdx, float z)
+int updatePalette(GPU_Palette* P, APoint (&points)[5])
 {
-
-  updateReds <<< P->gBlocks, P->gThreads >>> (P->red, xIdx, yIdx, z);
-  updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, xIdx, yIdx, z);
-	updateBlues <<< P->gBlocks, P->gThreads >>> (P->blue, xIdx, yIdx, z);
-
+  for (int i = 0;i < 5;i++) {
+    updateReds <<< P->gBlocks, P->gThreads >>> (P->red, points[i].xIdx, points[i].yIdx, points[i].z, points[i].color_heatTransfer);
+    updateGreens <<< P->gBlocks, P->gThreads >>> (P->green, points[i].xIdx, points[i].yIdx, points[i].z, points[i].color_heatTransfer);
+  	updateBlues <<< P->gBlocks, P->gThreads >>> (P->blue, points[i].xIdx, points[i].yIdx, points[i].z, points[i].color_heatTransfer);
+  }
   return 0;
 }
 
 /******************************************************************************/
-__global__ void updateReds(float* red, int xIdx, int yIdx, float z){
+__global__ void updateReds(float* red, int xIdx, int yIdx, float z, double colorTransfer){
 
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
@@ -104,7 +106,7 @@ __global__ void updateReds(float* red, int xIdx, int yIdx, float z){
 }
 
 /******************************************************************************/
-__global__ void updateGreens(float* green, int xIdx, int yIdx, float z){
+__global__ void updateGreens(float* green, int xIdx, int yIdx, float z, double colorTransfer){
 
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);
@@ -122,7 +124,7 @@ __global__ void updateGreens(float* green, int xIdx, int yIdx, float z){
 }
 
 /******************************************************************************/
-__global__ void updateBlues(float* blue, int xIdx, int yIdx, float z){
+__global__ void updateBlues(float* blue, int xIdx, int yIdx, float z, double colorTransfer){
 
   int x = threadIdx.x + (blockIdx.x * blockDim.x);
   int y = threadIdx.y + (blockIdx.y * blockDim.y);

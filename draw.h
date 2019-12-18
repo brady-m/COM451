@@ -4,11 +4,17 @@
 //#include "params.h"
 #include "gpu_main.h"
 
-//int runIt(GPU_Palette* P1, CPUAnimBitmap* A1);
-//int runMode0(void);
-//GPU_Palette openBMP(char* fileName);
-//GPU_Palette openPalette(int, int);
-//int runIt(GPU_Palette* P1,  CPUAnimBitmap* A1);
-//int usage();
+//void Animdraw(const AParams& params);
+
+
+struct APoint{
+	double       x,       y,       z;
+  double delta_x, delta_y, delta_z;
+  double start_x, start_y, start_z;
+  int xIdx, yIdx;
+  double red,           blue,           green;
+  int color_heatTransfer;
+};
+//void Animdraw(const AParams& paramters);
 
 #endif
