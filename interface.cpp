@@ -11,15 +11,11 @@
 #include <cstdlib>  // includes atoi() and atof()
 #include <string.h> // used by crack.h
 #include "crack.h"
-
+#include <iostream>
+#include "PDP1_Anastasiya.h"
+#include "PDP2_Anastasiya.h"
 // --- TODO: create interface.h library, move these there, and crack to here
 // --- also, update crack function to not need the -w flag at compile time
-struct AParams {
-  bool  verbose;
-  int   runMode;
-  int   myParam1;
-  float myParam2;
-};
 int usage();
 int setDefaults(AParams *PARAMS);
 int viewParams(const AParams *PARAMS);
@@ -32,9 +28,8 @@ int main(int argc, char *argv[]){
   AParams PARAMS;
 
   setDefaults(&PARAMS);
-
-  // -- get parameters that differ from defaults from command line:
   while((ch = crack(argc, argv, "r|v|a|b|", 0)) != 0) {
+    printf("CH = %d\n", ch);
   	switch(ch){
       case 'r' : PARAMS.runMode = atoi(arg_option); break;
       case 'v' : PARAMS.verbose = 1; break;
@@ -49,28 +44,27 @@ int main(int argc, char *argv[]){
 
   // run the system depending on runMode
   switch(PARAMS.runMode){
-      case 1:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 1 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction1(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction1 -- "
-          break;
+    case 0:
+        if (PARAMS.verbose) {
+          printf("\n -- running information about the computer -- \n");
+        }
+        print_pc_information();
+        break;
+    case 1:
+        if (PARAMS.verbose) {
+          printf("\n -- running Assignment 1 -- \n");
+        }
+        mainRun(PARAMS.myParam1);
+        break;
 
-      case 2:
-          if (PARAMS.verbose) printf("\n -- running in runMode = 2 -- \n");
-          // insert function of method for runMode 1 here, for example:
-          // myFunction2(&PARAMS);
-          // also change verbose message above to something more descriptive
-          // like, " -- running myFunction2 -- "
-          break;
-
-      case 3:
-          // and so on...
-          break;
-
-      default: printf("no valid run mode selected\n");
-  }
+    case 2:
+        if (PARAMS.verbose) {
+          printf("\n -- running in runMode = 2 -- \n");
+        }
+        drawGraph(PARAMS);
+        break;
+    default: printf("no valid run mode selected\n");
+}
 
 return 0;
 }
